@@ -25,6 +25,8 @@ final class ProjectStore: ObservableObject {
     @Published var scope: Scope = .project
     @Published var currentFile: String?          // 相对路径
     @Published var results: [SearchHit] = []
+    @Published var searchTruncated = false        // 搜索因行数预算提前截断
+    @Published var searchInfo = ""                // 状态栏提示（耗时/行数）
 
     @Published var anchor: Definition?
     @Published var graph: CallGraph?
@@ -40,9 +42,68 @@ final class ProjectStore: ObservableObject {
 
     // MARK: 内部索引
 
-    private var fileIndex: [String: SourceFile] = [:]   // relPath → 文件（含行）
+    private var fileIndex: [String: SourceFile] = [:]    // relPath → 文件（含行）
     private var defsByFile: [String: [Definition]] = [:] // relPath → 定义
+    private var lineOwners: [String: [Int]] = [:]        // relPath → 每行归属定义索引
     private var searchTask: Task<Void, Never>?
+
+    /// 目录树展开状态（路径用 / 连接）
+    @Published var expandedDirs: Set<String> = []
+
+    func toggleDir(_ path: String) {
+        if expandedDirs.contains(path) { expandedDirs.remove(path) }
+        else { expandedDirs.insert(path) }
+    }
+
+    /// 目录树（按 relPath 聚合，目录在前、文件在后，字母序）
+    struct TreeNode: Identifiable {
+        enum Kind { case directory(name: String, path: String, children: [TreeNode])
+                    case file(relPath: String) }
+        let kind: Kind
+        var id: String {
+            switch kind {
+            case .directory(_, let path, _): return "d:\(path)"
+            case .file(let relPath):         return "f:\(relPath)"
+            }
+        }
+    }
+
+    func buildTree() -> [TreeNode] {
+        var root: [String: (dirs: [String: [String]], files: [String])] = [:]
+        // 收集：目录路径 → 子目录名列表 + 文件相对路径列表
+        func ensureDir(_ dirPath: String) {
+            if root[dirPath] == nil { root[dirPath] = ([:], []) }
+        }
+        ensureDir("")
+        for f in files {
+            let comps = f.relPath.split(separator: "/").map(String.init)
+            var dirPath = ""
+            for i in 0..<(comps.count - 1) {
+                let parent = dirPath
+                dirPath = dirPath.isEmpty ? comps[i] : dirPath + "/" + comps[i]
+                ensureDir(parent)
+                if root[parent]?.dirs[comps[i]] == nil {
+                    root[parent]?.dirs[comps[i]] = []
+                }
+                ensureDir(dirPath)
+            }
+            root[dirPath]?.files.append(f.relPath)
+        }
+        func node(dirPath: String) -> [TreeNode] {
+            guard let entry = root[dirPath] else { return [] }
+            var nodes: [TreeNode] = []
+            for (name, _) in entry.dirs.sorted(by: { $0.key < $1.key }) {
+                let childPath = dirPath.isEmpty ? name : dirPath + "/" + name
+                nodes.append(.init(kind: .directory(name: name, path: childPath,
+                                                    children: node(dirPath: childPath))))
+            }
+            for rel in entry.files.sorted() {
+                nodes.append(.init(kind: .file(relPath: rel)))
+            }
+            return nodes
+        }
+        return node(dirPath: "")
+    }
 
     /// 绝对路径（详情面板/编辑器打开用）
     func absPath(_ relPath: String) -> String? {
@@ -71,11 +132,21 @@ final class ProjectStore: ObservableObject {
         self.allDefs = session.defs
         self.defsByFile = session.defsByFile
         self.fileIndex = session.fileIndex
+        // 预建「行→定义」索引（搜索归属 O(1) 的关键）
+        var owners: [String: [Int]] = [:]
+        for file in session.files {
+            owners[file.relPath] = SearchEngine.buildLineOwners(
+                file: file, defs: session.defsByFile[file.relPath] ?? [])
+        }
+        self.lineOwners = owners
+        self.expandedDirs = []
         self.currentFile = session.files.first?.relPath
         self.anchor = nil
         self.graph = nil
         self.selectedNodeID = nil
         self.results = []
+        self.searchTruncated = false
+        self.searchInfo = ""
         self.previewLines = []
         isLoading = false
         if session.files.isEmpty {
@@ -85,58 +156,43 @@ final class ProjectStore: ObservableObject {
 
     // MARK: 搜索
 
-    /// 查询变化 → 防抖后执行搜索
+    /// 查询变化 → 防抖后在后台线程搜索（不阻塞 UI）
     func scheduleSearch() {
         searchTask?.cancel()
-        searchTask = Task { [weak self] in
+        // 快照当前输入（后台任务使用不可变副本，避免与 UI 状态竞争）
+        let queryNow = query
+        let scopeNow = scope
+        let fileNow = currentFile
+        let filesNow = files
+        let defsNow = defsByFile
+        let ownersNow = lineOwners
+
+        searchTask = Task {
             try? await Task.sleep(nanoseconds: 80_000_000)
             guard !Task.isCancelled else { return }
-            await MainActor.run { self?.runSearch() }
-        }
-    }
-
-    private func runSearch() {
-        let q = query.trimmingCharacters(in: .whitespaces)
-        guard !q.isEmpty else { results = []; return }
-        var hits: [SearchHit] = []
-        var hitKeys = Set<String>()
-        let scopeFiles = scope == .project ? files
-            : files.filter { $0.relPath == currentFile }
-
-        func add(_ hit: SearchHit) {
-            guard hits.count < 300 else { return }
-            if hitKeys.insert(hit.id).inserted { hits.append(hit) }
-        }
-
-        for f in scopeFiles {
-            let defs = defsByFile[f.relPath] ?? []
-            for d in defs {
-                // 定义名命中
-                if d.name.range(of: q, options: .caseInsensitive) != nil {
-                    add(SearchHit(kind: .definition, definition: d,
-                                  line: d.line, code: d.signature))
-                }
-                // 定义范围内行文本命中（签名 + 调用行 + 函数体行）
-                if d.signature.range(of: q, options: .caseInsensitive) != nil
-                    && d.name.range(of: q, options: .caseInsensitive) == nil {
-                    add(SearchHit(kind: .text, definition: d, line: d.line, code: d.signature))
-                }
-                for site in d.calls where site.code.range(of: q, options: .caseInsensitive) != nil {
-                    add(SearchHit(kind: .text, definition: d, line: site.line, code: site.code))
-                }
-                for (idx, line) in f.lines.enumerated()
-                where line.range(of: q, options: .caseInsensitive) != nil {
-                    let n = idx + 1
-                    // 避开上面已加过的行
-                    if n == d.line { continue }
-                    if d.calls.contains(where: { $0.line == n }) { continue }
-                    if n >= d.line && n <= (d.endLine > 0 ? d.endLine : d.line) {
-                        add(SearchHit(kind: .text, definition: d, line: n, code: line))
-                    }
-                }
+            let t0 = Date()
+            // SearchEngine 是纯函数：在后台线程执行
+            let res = await Task.detached(priority: .userInitiated) {
+                SearchEngine.search(files: filesNow,
+                                    defsByFile: defsNow,
+                                    lineOwners: ownersNow,
+                                    query: queryNow,
+                                    scopeProject: scopeNow == .project,
+                                    currentFile: fileNow)
+            }.value
+            guard !Task.isCancelled else { return }
+            let ms = Int(Date().timeIntervalSince(t0) * 1000)
+            // 只把结果交回主线程，避免整段搜索阻塞 UI
+            await MainActor.run { [weak self] in
+                guard let self, self.query == queryNow else { return }
+                self.results = res.hits
+                self.searchTruncated = res.truncated
+                self.searchInfo = String(format: "%d 命中 · 扫 %.1f 万行 · %d ms",
+                                         res.hits.count,
+                                         Double(res.scannedLines) / 10_000,
+                                         ms)
             }
         }
-        results = hits
     }
 
     // MARK: 锚点与构图

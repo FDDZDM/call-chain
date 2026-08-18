@@ -84,6 +84,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/yezeming/Projects/CallChain/Sources/CallChain/SearchEngine.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/yezeming/Projects/CallChain/Sources/CallChain/main.swift"
         },
         {
@@ -113,6 +117,7 @@
         "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build/GraphRenderer.swift.o",
         "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build/Models.swift.o",
         "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build/ProjectStore.swift.o",
+        "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build/SearchEngine.swift.o",
         "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build/main.swift.o"
       ],
       "otherArguments" : [
@@ -224,6 +229,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build/SearchEngine.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build/main.swift.o"
         },
         {
@@ -247,6 +256,7 @@
         "/Users/yezeming/Projects/CallChain/Sources/CallChain/GraphRenderer.swift",
         "/Users/yezeming/Projects/CallChain/Sources/CallChain/Models.swift",
         "/Users/yezeming/Projects/CallChain/Sources/CallChain/ProjectStore.swift",
+        "/Users/yezeming/Projects/CallChain/Sources/CallChain/SearchEngine.swift",
         "/Users/yezeming/Projects/CallChain/Sources/CallChain/main.swift"
       ],
       "tempsPath" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build",
@@ -358,6 +368,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/yezeming/Projects/CallChain/Tests/CallChainTests/SearchTests.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/swift-version--58304C5D6DBC2206.txt"
         },
         {
@@ -373,7 +387,8 @@
       "moduleName" : "CallChainTests",
       "moduleOutputPath" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/Modules/CallChainTests.swiftmodule",
       "objects" : [
-        "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChainTests.build/AnalyzerTests.swift.o"
+        "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChainTests.build/AnalyzerTests.swift.o",
+        "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChainTests.build/SearchTests.swift.o"
       ],
       "otherArguments" : [
         "-target",
@@ -431,12 +446,17 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChainTests.build/SearchTests.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/Modules/CallChainTests.swiftmodule"
         }
       ],
       "prepareForIndexing" : false,
       "sources" : [
-        "/Users/yezeming/Projects/CallChain/Tests/CallChainTests/AnalyzerTests.swift"
+        "/Users/yezeming/Projects/CallChain/Tests/CallChainTests/AnalyzerTests.swift",
+        "/Users/yezeming/Projects/CallChain/Tests/CallChainTests/SearchTests.swift"
       ],
       "tempsPath" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChainTests.build",
       "wholeModuleOptimization" : false
@@ -467,6 +487,7 @@
       "/Users/yezeming/Projects/CallChain/Sources/CallChain/GraphRenderer.swift",
       "/Users/yezeming/Projects/CallChain/Sources/CallChain/Models.swift",
       "/Users/yezeming/Projects/CallChain/Sources/CallChain/ProjectStore.swift",
+      "/Users/yezeming/Projects/CallChain/Sources/CallChain/SearchEngine.swift",
       "/Users/yezeming/Projects/CallChain/Sources/CallChain/main.swift",
       "-I",
       "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/Modules",
@@ -588,6 +609,7 @@
       "callchain",
       "-c",
       "/Users/yezeming/Projects/CallChain/Tests/CallChainTests/AnalyzerTests.swift",
+      "/Users/yezeming/Projects/CallChain/Tests/CallChainTests/SearchTests.swift",
       "-I",
       "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/Modules",
       "-target",
@@ -753,6 +775,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/yezeming/Projects/CallChain/Sources/CallChain/SearchEngine.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/yezeming/Projects/CallChain/Sources/CallChain/main.swift"
         }
       ],
@@ -820,6 +846,10 @@
         {
           "kind" : "file",
           "name" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build/ProjectStore.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build/SearchEngine.swift.o"
         },
         {
           "kind" : "file",
@@ -907,6 +937,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build/SearchEngine.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChain.build/main.swift.o"
         },
         {
@@ -916,6 +950,10 @@
         {
           "kind" : "file",
           "name" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChainTests.build/AnalyzerTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChainTests.build/SearchTests.swift.o"
         }
       ],
       "outputFilePath" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChainPackageTests.product/Objects.LinkFileList"
@@ -930,6 +968,10 @@
         {
           "kind" : "file",
           "name" : "/Users/yezeming/Projects/CallChain/Tests/CallChainTests/AnalyzerTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/yezeming/Projects/CallChain/Tests/CallChainTests/SearchTests.swift"
         }
       ],
       "outputFilePath" : "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/debug/CallChainTests.build/sources"

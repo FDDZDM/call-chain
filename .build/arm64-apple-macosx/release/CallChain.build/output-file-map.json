@@ -88,6 +88,12 @@
     "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/ProjectStore.swiftdeps",
     "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/ProjectStore.dia"
   },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/SearchEngine.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/SearchEngine.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/SearchEngine~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/SearchEngine.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/SearchEngine.dia"
+  },
   "/Users/yezeming/Projects/CallChain/Sources/CallChain/main.swift": {
     "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/main.swift.o",
     "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/main~partial.swiftmodule",

@@ -25,6 +25,7 @@ struct ContentView: View {
                 }
             }
         }
+        .environmentObject(store)
         .onReceive(NotificationCenter.default.publisher(for: .openDirectoryRequest)) { note in
             if let urls = note.object as? [URL], let first = urls.first {
                 store.load(url: first)
@@ -88,20 +89,18 @@ struct ContentView: View {
                 .padding(.vertical, 8)
                 .onChange(of: store.query) { _ in store.scheduleSearch() }
 
-            // 结果 + 文件列表
-            List(selection: $store.selectedNodeID) {
+            // 结果 + 文件树
+            List {
                 if !store.results.isEmpty {
                     Section("查询结果 · \(store.results.count)") {
                         ForEach(store.results) { hit in
                             resultRow(hit)
-                                .tag(hit.definition.id)
                         }
                     }
                 }
-                Section("文件 · \(store.files.count)") {
-                    ForEach(store.files) { file in
-                        fileRow(file)
-                    }
+                Section("项目结构 · \(store.files.count) 文件") {
+                    FileTreeView(nodes: store.buildTree(),
+                                 expanded: $store.expandedDirs)
                 }
             }
             .listStyle(.sidebar)
@@ -112,14 +111,27 @@ struct ContentView: View {
                     ProgressView().controlSize(.small)
                     Text("扫描中…").font(.caption).foregroundColor(.secondary)
                 } else {
-                    Text("\(store.files.count) 文件 · \(store.allDefs.count) 定义")
+                    Text(fileCountText)
                         .font(.caption).foregroundColor(.secondary)
+                        .lineLimit(1)
+                    if store.searchTruncated {
+                        Text("⚠ 搜索超出行数上限已截断")
+                            .font(.caption).foregroundColor(.orange)
+                            .lineLimit(1)
+                    }
                 }
                 Spacer()
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
         }
+    }
+
+    private var fileCountText: String {
+        if store.query.trimmingCharacters(in: .whitespaces).isEmpty {
+            return "\(store.files.count) 文件 · \(store.allDefs.count) 定义"
+        }
+        return store.searchInfo
     }
 
     private func resultRow(_ hit: SearchHit) -> some View {
@@ -153,24 +165,62 @@ struct ContentView: View {
             }
         }
     }
+}
 
-    private func fileRow(_ file: SourceFile) -> some View {
+// MARK: - 项目目录树（递归视图）
+
+struct FileTreeView: View {
+    let nodes: [ProjectStore.TreeNode]
+    @Binding var expanded: Set<String>
+
+    var body: some View {
+        ForEach(nodes) { node in
+            switch node.kind {
+            case .directory(_, let path, let children):
+                DisclosureGroup(isExpanded: binding(for: path)) {
+                    FileTreeView(nodes: children, expanded: $expanded)
+                        .padding(.leading, 6)
+                } label: {
+                    Label((path as NSString).lastPathComponent,
+                          systemImage: "folder")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+            case .file(let relPath):
+                FileTreeRow(relPath: relPath)
+            }
+        }
+    }
+
+    private func binding(for path: String) -> Binding<Bool> {
+        Binding(
+            get: { expanded.contains(path) },
+            set: { on in
+                if on { expanded.insert(path) } else { expanded.remove(path) }
+            }
+        )
+    }
+}
+
+/// 树里的文件行（需要访问 store，单独抽成视图）
+struct FileTreeRow: View {
+    let relPath: String
+    @EnvironmentObject private var store: ProjectStore
+
+    var body: some View {
         Button {
-            store.selectFile(file.relPath)
+            store.selectFile(relPath)
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "doc.text")
                     .font(.system(size: 11))
                     .foregroundColor(.secondary)
-                    .frame(width: 16)
-                Text(file.relPath)
+                    .frame(width: 14)
+                Text((relPath as NSString).lastPathComponent)
                     .font(.system(size: 12))
                     .lineLimit(1)
-                    .foregroundColor(store.currentFile == file.relPath ? .primary : .secondary)
-                Spacer()
-                Text(file.language.displayName)
-                    .font(.system(size: 9))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(store.currentFile == relPath ? .primary : .secondary)
+                Spacer(minLength: 4)
             }
             .contentShape(Rectangle())
         }

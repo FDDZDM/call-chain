@@ -9,5 +9,11 @@
     "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainTests.build/AnalyzerTests~partial.swiftmodule",
     "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainTests.build/AnalyzerTests.swiftdeps",
     "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainTests.build/AnalyzerTests.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Tests/CallChainTests/SearchTests.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainTests.build/SearchTests.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainTests.build/SearchTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainTests.build/SearchTests.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainTests.build/SearchTests.dia"
   }
 }
