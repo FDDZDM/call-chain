@@ -1,0 +1,15 @@
+/Users/yezeming/Projects/CallChain/Sources/CallChain/AnalysisSession.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/AnalyzerCore.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/AnalyzerPatterns.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/AnalyzerStrings.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/CLI.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/CallChainApp.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/CallGraph.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/ContentView.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/FileScanner.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/GraphCanvasView.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/GraphLayout.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/GraphRenderer.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/Models.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/ProjectStore.swift
+/Users/yezeming/Projects/CallChain/Sources/CallChain/main.swift

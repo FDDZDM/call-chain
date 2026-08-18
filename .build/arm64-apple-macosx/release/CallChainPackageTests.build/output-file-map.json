@@ -1,0 +1,13 @@
+{
+  "": {
+    "dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainPackageTests.build/CallChainPackageTests.d",
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainPackageTests.build/CallChainPackageTests.o",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainPackageTests.build/primary.swiftdeps"
+  },
+  "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainPackageTests.derived/runner.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainPackageTests.build/runner.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainPackageTests.build/runner~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainPackageTests.build/runner.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainPackageTests.build/runner.dia"
+  }
+}

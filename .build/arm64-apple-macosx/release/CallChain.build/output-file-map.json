@@ -1,0 +1,97 @@
+{
+  "": {
+    "dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CallChain.d",
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CallChain.o",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/primary.swiftdeps"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/AnalysisSession.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalysisSession.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalysisSession~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalysisSession.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalysisSession.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/AnalyzerCore.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerCore.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerCore~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerCore.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerCore.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/AnalyzerPatterns.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerPatterns.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerPatterns~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerPatterns.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerPatterns.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/AnalyzerStrings.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerStrings.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerStrings~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerStrings.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/AnalyzerStrings.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/CLI.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CLI.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CLI~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CLI.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CLI.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/CallChainApp.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CallChainApp.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CallChainApp~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CallChainApp.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CallChainApp.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/CallGraph.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CallGraph.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CallGraph~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CallGraph.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/CallGraph.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/ContentView.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/ContentView.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/ContentView~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/ContentView.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/ContentView.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/FileScanner.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/FileScanner.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/FileScanner~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/FileScanner.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/FileScanner.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/GraphCanvasView.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphCanvasView.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphCanvasView~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphCanvasView.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphCanvasView.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/GraphLayout.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphLayout.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphLayout~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphLayout.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphLayout.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/GraphRenderer.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphRenderer.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphRenderer~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphRenderer.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/GraphRenderer.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/Models.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/Models.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/Models~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/Models.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/Models.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/ProjectStore.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/ProjectStore.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/ProjectStore~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/ProjectStore.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/ProjectStore.dia"
+  },
+  "/Users/yezeming/Projects/CallChain/Sources/CallChain/main.swift": {
+    "object": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/main.swift.o",
+    "swiftmodule": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/main.swiftdeps",
+    "diagnostics": "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChain.build/main.dia"
+  }
+}

@@ -1,0 +1,3 @@
+module CallChainPackageTests {
+    header "/Users/yezeming/Projects/CallChain/.build/arm64-apple-macosx/release/CallChainPackageTests.build/include/CallChainPackageTests-Swift.h"
+}
