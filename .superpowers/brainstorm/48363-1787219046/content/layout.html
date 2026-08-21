@@ -1,0 +1,85 @@
+<h2>整体界面布局选哪个？</h2>
+<p class="subtitle">Electron 桌面应用的主窗口布局。两种都包含：项目树、代码查看器(Monaco)、调用链图、详情检查器。</p>
+
+<style>
+  .layout-card { background: var(--card-bg, #fff); border: 1px solid var(--border, #e2e2e2); border-radius: 12px; padding: 0; margin: 14px 0; cursor: pointer; transition: all .15s; overflow: hidden; }
+  .layout-card:hover { border-color: var(--accent, #007aff); box-shadow: 0 2px 12px rgba(0,122,255,.12); }
+  .layout-card.selected { border-color: var(--accent, #007aff); box-shadow: 0 0 0 3px rgba(0,122,255,.2); }
+  .layout-card .head { padding: 14px 16px 6px; }
+  .layout-card h3 { margin: 0 0 4px; font-size: 16px; }
+  .layout-card .desc { font-size: 12px; color: #777; margin: 0; }
+  .wire { display: flex; height: 280px; font-size: 11px; color: #555; }
+  .wire > div { border: 1px solid #d8d8d8; display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; flex-direction: column; }
+  .wire .ttl { font-weight: 600; color: #222; margin-bottom: 4px; }
+  .wire .sub { font-size: 10px; color: #888; }
+  .bar { height: 26px; background: #f4f5f7; border-bottom: 1px solid #e2e2e2; display: flex; align-items: center; padding: 0 12px; font-size: 11px; color: #777; gap: 10px; }
+  .bar .dot { width: 8px; height: 8px; border-radius: 50%; background: #ff5f57; display: inline-block; }
+  .bar .dot.y { background: #febc2e; }
+  .bar .dot.g { background: #28c840; }
+  .pill { font-size: 9px; padding: 1px 6px; border-radius: 8px; background: #eef4ff; color: #0a6cff; }
+</style>
+
+<div class="options">
+
+  <!-- A: 三栏 文件树 | 代码 | (图+检查器) -->
+  <div class="option" data-choice="a" onclick="toggleSelect(this)" style="list-style:none;display:block">
+    <div class="layout-card">
+      <div class="head">
+        <h3>A · 三栏 <span class="pill">类 VSCode</span></h3>
+        <p class="desc">左=项目树，中=代码查看器，右=调用链图(上)+详情检查器(下)。代码占主视觉，图在右侧常驻。</p>
+      </div>
+      <div class="bar"><span class="dot"></span><span class="dot y"></span><span class="dot g"></span> ⌘O 打开项目 · CallChain</div>
+      <div class="wire">
+        <div style="flex: 0 0 200px; background: #fafbfc;">
+          <div class="ttl">项目树</div>
+          <div class="sub">文件/目录<br>点击打开文件</div>
+        </div>
+        <div style="flex: 1; background: #fff;">
+          <div class="ttl">代码查看器 (Monaco)</div>
+          <div class="sub">只读 · 多标签<br>⌘+点击函数名</div>
+        </div>
+        <div style="flex: 0 0 320px; background: #fafbfc; flex-direction: column; padding: 0;">
+          <div style="flex: 1.4; border-bottom: 1px solid #d8d8d8; align-items: center; justify-content: center; display: flex; flex-direction: column;">
+            <div class="ttl">调用链图</div>
+            <div class="sub">左=调用者 中=锚点 右=被调用者</div>
+          </div>
+          <div style="flex: 1; align-items: center; justify-content: center; display: flex; flex-direction: column;">
+            <div class="ttl">详情检查器</div>
+            <div class="sub">选中节点详情 · 调用点 · 源码预览</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- B: 两栏 代码 | 图；项目树抽屉 -->
+  <div class="option" data-choice="b" onclick="toggleSelect(this)" style="list-style:none;display:block">
+    <div class="layout-card">
+      <div class="head">
+        <h3>B · 两栏 + 抽屉 <span class="pill">图优先</span></h3>
+        <p class="desc">主区只分两栏：左=代码，右=调用链图(占大头)。项目树收进左侧抽屉(默认隐藏，按需唤出)。让链路图获得最大空间。</p>
+      </div>
+      <div class="bar"><span class="dot"></span><span class="dot y"></span><span class="dot g"></span> ⌘O 打开项目 · CallChain</div>
+      <div class="wire">
+        <div style="flex: 1; background: #fff;">
+          <div class="ttl">代码查看器 (Monaco)</div>
+          <div class="sub">只读 · 多标签<br>⌘+点击函数名</div>
+        </div>
+        <div style="flex: 0 0 460px; background: #fafbfc; flex-direction: column; padding: 0;">
+          <div style="flex: 2; border-bottom: 1px solid #d8d8d8; align-items: center; justify-content: center; display: flex; flex-direction: column;">
+            <div class="ttl">调用链图 (大)</div>
+            <div class="sub">左=调用者 中=锚点 右=被调用者</div>
+          </div>
+          <div style="flex: 1; align-items: center; justify-content: center; display: flex; flex-direction: column;">
+            <div class="ttl">详情检查器</div>
+            <div class="sub">选中节点详情 · 调用点 · 源码预览</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding: 8px 16px 12px; font-size: 11px; color: #888;">项目树：左侧抽屉(默认隐藏) · ⌘\\ 或工具栏按钮唤出</div>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:14px">两种都支持拖拽分隔条调整比例、图缩放/平移、节点点击重建。区别在「项目树常驻 vs 抽屉」和「图的空间大小」。</p>

@@ -87,7 +87,7 @@ struct ContentView: View {
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 8)
-                .onChange(of: store.query) { _ in store.scheduleSearch() }
+                .onChange(of: store.query) { store.scheduleSearch() }
 
             // 结果 + 文件树
             List {
@@ -136,7 +136,7 @@ struct ContentView: View {
 
     private func resultRow(_ hit: SearchHit) -> some View {
         Button {
-            store.anchorDefinition(hit.definition)
+            store.anchorSearchHit(hit)
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: hit.kind == .definition
@@ -145,10 +145,14 @@ struct ContentView: View {
                     .foregroundColor(.accentColor)
                     .frame(width: 16)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(hit.definition.name)
+                    Text(hit.kind == .definition
+                         ? hit.definition.name
+                         : hit.code.trimmingCharacters(in: .whitespaces))
                         .font(.system(size: 12, weight: .medium))
                         .lineLimit(1)
-                    Text("\(hit.definition.file):\(hit.line)")
+                    Text(hit.kind == .definition
+                         ? "\(hit.definition.file):\(hit.line)"
+                         : "位于 \(hit.definition.name) · \(hit.definition.file):\(hit.line)")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
                         .lineLimit(1)
@@ -159,7 +163,9 @@ struct ContentView: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            Button("以它为中心") { store.anchorDefinition(hit.definition) }
+            Button(hit.kind == .definition ? "以它为中心" : "查看这条语句的调用链") {
+                store.anchorSearchHit(hit)
+            }
             Button("在编辑器中打开") {
                 store.openInEditor(relPath: hit.definition.file, line: hit.line)
             }
@@ -245,6 +251,13 @@ struct DetailView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onChange(of: store.callerDepth) {
+            if !store.showsFullChain { store.rebuildGraph() }
+        }
+        .onChange(of: store.callDepth) {
+            if !store.showsFullChain { store.rebuildGraph() }
+        }
+        .onChange(of: store.showsFullChain) { store.rebuildGraph() }
     }
 
     private var header: some View {
@@ -260,6 +273,12 @@ struct DetailView: View {
                     .padding(.horizontal, 6).padding(.vertical, 2)
                     .background(Color.accentColor.opacity(0.15),
                                 in: Capsule())
+                if let focus = store.focusedStatement {
+                    Label("语句 · L\(focus.line)", systemImage: "scope")
+                        .font(.caption2)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Color.accentColor.opacity(0.15), in: Capsule())
+                }
             } else {
                 Text("未选择目标").foregroundColor(.secondary)
             }
@@ -267,7 +286,14 @@ struct DetailView: View {
 
             // 深度控制
             depthControl(label: "上层", value: $store.callerDepth)
+                .disabled(store.showsFullChain)
             depthControl(label: "下层", value: $store.callDepth)
+                .disabled(store.showsFullChain)
+
+            Toggle("完整链", isOn: $store.showsFullChain)
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .help("遍历全部可达的调用者与被调用者；超大调用图仍受安全上限保护")
 
             Button {
                 store.fitRequestID += 1
@@ -285,7 +311,8 @@ struct DetailView: View {
 
             if let graph = store.graph {
                 Text("\(graph.nodes.count) 节点 · \(graph.edges.count) 边"
-                     + (graph.unresolved.isEmpty ? "" : " · 未解析 \(graph.unresolved.count)"))
+                     + (graph.unresolved.isEmpty ? "" : " · 未解析 \(graph.unresolved.count)")
+                     + (graph.isTruncated ? " · 已达安全上限" : ""))
                     .font(.caption).foregroundColor(.secondary)
             }
         }
@@ -337,8 +364,14 @@ struct InspectorView: View {
         VStack(alignment: .leading, spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
+                    if let focus = store.focusedStatement {
+                        statementFocusCard(focus)
+                        Divider()
+                    }
                     if let node = selectedNode {
                         nodeHeader(node)
+                        Divider()
+                        functionInsightCard(node)
                         Divider()
                         callRelations(node)
                         Divider()
@@ -360,6 +393,41 @@ struct InspectorView: View {
     private var selectedNode: GraphNode? {
         guard let id = store.selectedNodeID else { return nil }
         return store.node(id: id)
+    }
+
+    // 当前全文搜索命中的具体语句
+    private func statementFocusCard(_ focus: StatementFocus) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack {
+                Label("当前语句", systemImage: "scope")
+                    .font(.caption.bold())
+                    .foregroundColor(.accentColor)
+                Spacer()
+                Text("\((focus.file as NSString).lastPathComponent):\(focus.line)")
+                    .font(.caption.monospacedDigit())
+                    .foregroundColor(.secondary)
+            }
+            Text(focus.code.trimmingCharacters(in: .whitespaces))
+                .font(.system(size: 11, design: .monospaced))
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(8)
+                .background(Color.accentColor.opacity(0.10),
+                            in: RoundedRectangle(cornerRadius: 7))
+            Text("调用图以它所属的函数为中心；该语句产生的调用边已加粗。")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+            HStack(spacing: 8) {
+                Button("查看上下文") {
+                    store.showSnippet(file: focus.file, line: focus.line)
+                }
+                Button("在编辑器中打开") {
+                    store.openInEditor(relPath: focus.file, line: focus.line)
+                }
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
     }
 
     // 节点头部
@@ -399,6 +467,40 @@ struct InspectorView: View {
                 .help("复制名字")
             }
         }
+    }
+
+    // 函数作用：注释优先，缺失时显示可核验的离线推断
+    private func functionInsightCard(_ node: GraphNode) -> some View {
+        let insight = store.insight(for: node.def)
+        return VStack(alignment: .leading, spacing: 7) {
+            HStack {
+                Text("函数作用")
+                    .font(.caption.bold())
+                    .foregroundColor(.secondary)
+                Spacer()
+                Label(insight.basis.label, systemImage: insight.basis.icon)
+                    .font(.caption2)
+                    .foregroundColor(insight.basis == .sourceComment ? .green : .secondary)
+            }
+            Text(insight.summary)
+                .font(.system(size: 13, weight: .medium))
+                .textSelection(.enabled)
+                .fixedSize(horizontal: false, vertical: true)
+            ForEach(insight.facts, id: \.self) { fact in
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Circle()
+                        .fill(Color.secondary.opacity(0.55))
+                        .frame(width: 4, height: 4)
+                    Text(fact)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .textSelection(.enabled)
+                }
+            }
+        }
+        .padding(10)
+        .background(Color.primary.opacity(0.045),
+                    in: RoundedRectangle(cornerRadius: 9))
     }
 
     // 调用关系列表

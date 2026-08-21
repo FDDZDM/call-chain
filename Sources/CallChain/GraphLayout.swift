@@ -14,7 +14,6 @@ enum GraphLayout {
     /// 计算节点尺寸与位置，并填充 bounds 与 levels
     static func layout(_ graph: inout CallGraph) {
         let minLevel = graph.nodes.map(\.level).min() ?? 0
-        let maxLevel = graph.nodes.map(\.level).max() ?? 0
 
         // 尺寸估计（名字宽度按等宽近似）
         for i in graph.nodes.indices {

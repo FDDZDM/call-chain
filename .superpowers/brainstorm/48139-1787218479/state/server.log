@@ -1,0 +1,2 @@
+{"type":"server-started","port":53350,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:53350","screen_dir":"/Users/yezeming/Projects/CallChain/.superpowers/brainstorm/48139-1787218479/content","state_dir":"/Users/yezeming/Projects/CallChain/.superpowers/brainstorm/48139-1787218479/state"}
+{"type":"server-stopped","reason":"owner process exited"}

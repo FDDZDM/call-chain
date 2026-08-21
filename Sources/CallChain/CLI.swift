@@ -25,6 +25,7 @@ enum CLI {
         let symbol = value(after: "--symbol", in: args)
         let callers = Int(value(after: "--callers", in: args) ?? "") ?? 2
         let callees = Int(value(after: "--callees", in: args) ?? "") ?? 2
+        let fullChain = args.contains("--full")
         let json = args.contains("--json")
         let pngPath = value(after: "--png", in: args)
         var options = ScanOptions()
@@ -42,7 +43,7 @@ enum CLI {
 
         if json {
             print(sessionJSON(session, symbol: symbol, callers: callers,
-                              callees: callees))
+                              callees: callees, fullChain: fullChain))
             return 0
         }
 
@@ -95,7 +96,8 @@ enum CLI {
         print()
 
         var graph = GraphBuilder.build(allDefs: session.defs, target: target,
-                                       callDepth: callees, callerDepth: callers)
+                                       callDepth: fullChain ? .max : callees,
+                                       callerDepth: fullChain ? .max : callers)
         GraphLayout.layout(&graph)
 
         // 按层级输出
@@ -136,7 +138,8 @@ enum CLI {
         }
         print()
         print("图表统计: \(graph.nodes.count) 节点 · \(graph.edges.count) 边"
-              + " · 未解析 \(graph.unresolved.count)")
+              + " · 未解析 \(graph.unresolved.count)"
+              + (graph.isTruncated ? " · 已达安全上限，结果截断" : ""))
 
         // --png <path>：无头导出调用链图（走与 GUI 相同的渲染管线）
         if let pngPath {
@@ -174,6 +177,7 @@ enum CLI {
       --symbol <名称>   输出该符号的调用链（默认输出统计摘要）
       --callers <n>     调用者层数（默认 2）
       --callees <n>     被调用者层数（默认 2）
+      --full            展开全部可达调用链（仍受节点安全上限保护）
       --json            输出 JSON（适合脚本处理）
       --exclude <a,b>   额外跳过的目录名
       --maxfiles <N>    最多扫描文件数
@@ -195,20 +199,23 @@ enum CLI {
         var nodes: [NodeOut]
         var edges: [EdgeOut]
         var unresolved: [EdgeOut.Site]
+        var truncated: Bool
     }
 
     private static func sessionJSON(_ session: AnalysisSession,
                                     symbol: String?, callers: Int,
-                                    callees: Int) -> String {
+                                    callees: Int, fullChain: Bool) -> String {
         var out = JsonOut(root: "", files: session.files.count,
                           definitions: session.defs.count, symbol: symbol,
-                          anchor: nil, nodes: [], edges: [], unresolved: [])
+                          anchor: nil, nodes: [], edges: [], unresolved: [],
+                          truncated: false)
         if let symbol, let match = session.defs.first(where: {
             $0.name.range(of: symbol, options: .caseInsensitive) != nil
                 && $0.kind != .topLevel
         }) {
             var graph = GraphBuilder.build(allDefs: session.defs, target: match,
-                                           callDepth: callees, callerDepth: callers)
+                                           callDepth: fullChain ? .max : callees,
+                                           callerDepth: fullChain ? .max : callers)
             GraphLayout.layout(&graph)
             out.anchor = JsonOut.NodeOut(name: match.name, kind: match.kind.rawValue,
                                          file: match.file, line: match.line, level: 0)
@@ -225,6 +232,7 @@ enum CLI {
             out.unresolved = graph.unresolved.map {
                 JsonOut.EdgeOut.Site(file: $0.file, line: $0.line)
             }
+            out.truncated = graph.isTruncated || graph.unresolvedTruncated
         }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

@@ -265,7 +265,7 @@ import Foundation
         let defs = makeDefs([("A.kt", text)])
         let a = defs.first { $0.name == "a" }!
         // 被调用深度 2：b、c 可见，d 不可见
-        var g = GraphBuilder.build(allDefs: defs, target: a,
+        let g = GraphBuilder.build(allDefs: defs, target: a,
                                    callDepth: 2, callerDepth: 1)
         #expect(g.nodes.contains { $0.def.name == "c" })
         #expect(!g.nodes.contains { $0.def.name == "d" })
@@ -279,10 +279,25 @@ import Foundation
         """
         let defs = makeDefs([("A.kt", text)])
         let a = defs.first { $0.name == "a" }!
-        var g = GraphBuilder.build(allDefs: defs, target: a,
+        let g = GraphBuilder.build(allDefs: defs, target: a,
                                    callDepth: 1, callerDepth: 1)
         #expect(g.unresolved.count == 1)
         #expect(g.unresolved[0].callee == "missingFn")
+    }
+
+    @Test func resolvedCallOutsideDepthIsNotReportedAsUnresolved() {
+        let text = """
+        fun a() { b() }
+        fun b() { c() }
+        fun c() {}
+        """
+        let defs = makeDefs([("A.kt", text)])
+        let a = defs.first { $0.name == "a" }!
+        let g = GraphBuilder.build(allDefs: defs, target: a,
+                                   callDepth: 1, callerDepth: 1)
+        #expect(g.nodes.contains { $0.def.name == "b" })
+        #expect(!g.nodes.contains { $0.def.name == "c" })
+        #expect(!g.unresolved.contains { $0.callee == "c" })
     }
 
     @Test func overloadingSameName() {
@@ -293,7 +308,7 @@ import Foundation
         """
         let defs = makeDefs([("A.kt", text)])
         let caller = defs.first { $0.name == "caller" }!
-        var g = GraphBuilder.build(allDefs: defs, target: caller,
+        let g = GraphBuilder.build(allDefs: defs, target: caller,
                                    callDepth: 1, callerDepth: 1)
         // 同文件同名两个重载都应被解析连接
         let calleeNodes = g.nodes.filter { $0.def.name == "callee" }

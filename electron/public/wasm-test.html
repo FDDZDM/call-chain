@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>WASM Test</title>
+<style>
+body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+#log { white-space: pre-wrap; font-size: 13px; line-height: 1.5; }
+.ok { color: #4ec9b0; }
+.err { color: #f44747; }
+.info { color: #569cd6; }
+button { padding: 8px 16px; font-size: 14px; margin: 4px; cursor: pointer; }
+</style>
+</head>
+<body>
+<h2>WASM/Worker 加载测试</h2>
+<button onclick="testDirect()">直接加载 Parser（主线程）</button>
+<button onclick="testWorker()">通过 Worker 加载</button>
+<div id="log"></div>
+<script>
+const logEl = document.getElementById('log')
+function log(msg, cls='') {
+  const span = document.createElement('span')
+  span.className = cls
+  span.textContent = msg + '\n'
+  logEl.appendChild(span)
+}
+
+const TEST_TS = `function hello(name: string): string {
+  return "Hello, " + name;
+}
+function greet() {
+  console.log(hello("world"));
+}
+class Foo {
+  bar(x: number) { return x + 1; }
+}`
+
+async function testDirect() {
+  logEl.innerHTML = ''
+  log('=== 直接在主线程加载 Parser ===', 'info')
+  try {
+    const { ensureParserReady, parseFile } = await import('/src/analyzer/parser.ts')
+    log('Parser 模块 import 成功', 'ok')
+    await ensureParserReady()
+    log('Parser 初始化成功！', 'ok')
+    const result = await parseFile('test.ts', 'typescript', TEST_TS)
+    log(`functions=${result.functions.length}, calls=${result.calls.length}`, 'ok')
+    result.functions.forEach(f => log(`  func: ${f.name}${f.className ? ' in ' + f.className : ''} @L${f.startLine}`, 'ok'))
+    result.calls.forEach(c => log(`  call: ${c.calleeName}() @L${c.line}`, 'ok'))
+  } catch (e) {
+    log('失败: ' + e.message, 'err')
+    console.error(e)
+  }
+}
+
+function testWorker() {
+  logEl.innerHTML = ''
+  log('=== 通过 Worker 加载 Parser ===', 'info')
+  try {
+    const worker = new Worker(new URL('/src/analyzer/analyzer.worker.ts', location.origin), { type: 'module' })
+    let responses = 0
+    worker.onmessage = (e) => {
+      responses++
+      const m = e.data
+      if (m.type === 'progress') {
+        log(`progress: ${m.parsed}/${m.total} funcs=${m.totalFunctions || 0}`, responses < 5 ? 'ok' : '')
+      } else if (m.type === 'fileParsed') {
+        log(`fileParsed: funcs=${m.result.functions.length}, calls=${m.result.calls.length}`, 'ok')
+        m.result.functions.forEach(f => log(`  func: ${f.name} @L${f.startLine}`, 'ok'))
+        if (m.result.error) log(`  error: ${m.result.error}`, 'err')
+      } else if (m.type === 'error') {
+        log(`Worker error: ${m.message}`, 'err')
+      } else {
+        log(`msg: ${m.type}`, 'info')
+      }
+    }
+    worker.onerror = (e) => {
+      log(`Worker onerror: ${e.message} at ${e.filename}:${e.lineno}`, 'err')
+    }
+    worker.postMessage({ type: 'parseProject', files: [{path: 'test.ts', lang: 'typescript'}] })
+    worker.postMessage({ type: 'parseFile', path: 'test.ts', language: 'typescript', content: TEST_TS })
+    setTimeout(() => {
+      if (responses === 0) log('超时：Worker 10s 无响应', 'err')
+      worker.terminate()
+    }, 10000)
+  } catch (e) {
+    log('创建 Worker 失败: ' + e.message, 'err')
+  }
+}
+</script>
+</body>
+</html>

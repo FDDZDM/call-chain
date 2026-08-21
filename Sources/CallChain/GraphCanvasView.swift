@@ -21,7 +21,8 @@ struct GraphCanvasView: View {
                                     y: pan.height + viewSize.height / 2)
                 context.scaleBy(x: scale, y: scale)
                 GraphRenderer.draw(context: &context, size: viewSize,
-                                   graph: graph, selectedID: store.selectedNodeID)
+                                   graph: graph, selectedID: store.selectedNodeID,
+                                   focusedStatement: store.focusedStatement)
             }
             .background(Color.primary.opacity(0.02))
             .contentShape(Rectangle())
@@ -35,8 +36,8 @@ struct GraphCanvasView: View {
                 }
             }
             .onAppear { fitGraph(viewSize: viewSize) }
-            .onChange(of: store.fitRequestID) { _ in fitGraph(viewSize: viewSize) }
-            .onChange(of: store.graph?.nodes.count) { _ in fitGraph(viewSize: viewSize) }
+            .onChange(of: store.fitRequestID) { fitGraph(viewSize: viewSize) }
+            .onChange(of: store.graph?.nodes.count) { fitGraph(viewSize: viewSize) }
             .overlay(alignment: .topLeading) {
                 legendView.padding(10)
             }
@@ -131,6 +132,9 @@ struct GraphCanvasView: View {
             legendRow("■", Color.accentColor, "查询目标")
             legendRow("■", .orange, "调用者")
             legendRow("■", .teal, "被调用者")
+            if store.focusedStatement != nil {
+                legendRow("━", Color.accentColor, "当前语句的调用")
+            }
         }
         .font(.system(size: 11))
         .padding(8)

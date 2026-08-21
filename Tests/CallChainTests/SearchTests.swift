@@ -167,4 +167,30 @@ import Foundation
             Issue.record("预期 a 是目录")
         }
     }
+
+    @MainActor
+    @Test func textHitKeepsExactStatementAsGraphFocus() {
+        let s = session(files: [
+            ("Flow.kt", """
+            fun start() {
+                nextStep()
+            }
+            fun nextStep() {}
+            """, .kotlin),
+        ])
+        let owner = s.defs.first { $0.name == "start" }!
+        let hit = SearchHit(kind: .text, definition: owner, line: 2,
+                            code: "    nextStep()")
+        let store = ProjectStore()
+        store.allDefs = s.defs
+
+        store.anchorSearchHit(hit)
+
+        #expect(store.anchor?.id == owner.id)
+        #expect(store.focusedStatement?.line == 2)
+        #expect(store.focusedStatement?.code.contains("nextStep") == true)
+        #expect(store.graph?.edges.contains { edge in
+            edge.sites.contains { $0.line == 2 && $0.callee == "nextStep" }
+        } == true)
+    }
 }

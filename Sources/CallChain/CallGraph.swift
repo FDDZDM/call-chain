@@ -33,6 +33,8 @@ struct CallGraph {
     var unresolved: [CallSite] = []   // 锚点子图中无法解析到定义的调用
     var bounds: CGRect = .zero        // 世界坐标系包围盒（布局后填充）
     var levels: [(index: Int, count: Int)] = []  // 各层节点数（index 为 level）
+    var isTruncated = false           // 节点/单层安全上限导致链路未完全展开
+    var unresolvedTruncated = false   // 未解析调用只保留前 maxUnresolved 个
 
     var anchor: GraphNode? { nodes.first { $0.level == 0 } }
 }
@@ -74,6 +76,7 @@ enum GraphBuilder {
         // ---- 双向 BFS 收集节点 ----
         var chosen: [String: Int] = [:]   // defID -> level
         chosen[target.id] = 0
+        var isTruncated = false
 
         // 向下：被调用者
         var queue: [(String, Int)] = [(target.id, 1)]
@@ -81,10 +84,17 @@ enum GraphBuilder {
         while qi < queue.count {
             let (did, lvl) = queue[qi]; qi += 1
             if lvl > callDepth { continue }
-            if chosen.count >= maxNodes { break }
+            if chosen.count >= maxNodes {
+                if !(outgoing[did] ?? []).isEmpty { isTruncated = true }
+                break
+            }
             for next in outgoing[did] ?? [] {
                 if chosen[next] != nil { continue }
-                if levelCount(chosen, lvl) >= maxPerLevel { continue }
+                if chosen.count >= maxNodes { isTruncated = true; break }
+                if levelCount(chosen, lvl) >= maxPerLevel {
+                    isTruncated = true
+                    continue
+                }
                 chosen[next] = lvl
                 queue.append((next, lvl + 1))
             }
@@ -94,10 +104,17 @@ enum GraphBuilder {
         while qi < queue.count {
             let (did, lvl) = queue[qi]; qi += 1
             if lvl > callerDepth { continue }
-            if chosen.count >= maxNodes { break }
+            if chosen.count >= maxNodes {
+                if !(incoming[did] ?? []).isEmpty { isTruncated = true }
+                break
+            }
             for prev in incoming[did] ?? [] {
                 if chosen[prev] != nil { continue }
-                if levelCount(chosen, -lvl) >= maxPerLevel { continue }
+                if chosen.count >= maxNodes { isTruncated = true; break }
+                if levelCount(chosen, -lvl) >= maxPerLevel {
+                    isTruncated = true
+                    continue
+                }
                 chosen[prev] = -lvl
                 queue.append((prev, lvl + 1))
             }
@@ -116,18 +133,21 @@ enum GraphBuilder {
         // ---- 组边 + 未解析调用 ----
         var edges: [String: GraphEdge] = [:]
         var unresolved: [CallSite] = []
+        var unresolvedTruncated = false
         let nodeSet = Set(chosen.keys)
         for d in allDefs where chosen[d.id] != nil {
             for site in d.calls {
-                if unresolved.count >= maxUnresolved { break }
-                let resolved = resolve(site.callee, from: d, index: nameIndex)
-                    .filter { nodeSet.contains($0.id) }
-                if resolved.isEmpty {
-                    if !nodeSet.contains(where: { $0 == d.id }) { continue }
-                    unresolved.append(site)
+                let allResolved = resolve(site.callee, from: d, index: nameIndex)
+                if allResolved.isEmpty {
+                    if unresolved.count < maxUnresolved {
+                        unresolved.append(site)
+                    } else {
+                        unresolvedTruncated = true
+                    }
                     continue
                 }
-                for t in resolved {
+                // 有定义但因深度/安全上限未进入当前图，不应误报成“未解析”。
+                for t in allResolved where nodeSet.contains(t.id) {
                     let key = "\(d.id) -> \(t.id)"
                     var edge = edges[key] ?? GraphEdge(id: key, from: d.id,
                                                        to: t.id, sites: [])
@@ -140,7 +160,9 @@ enum GraphBuilder {
 
         var graph = CallGraph(nodes: nodes,
                               edges: edges.values.sorted { $0.id < $1.id },
-                              unresolved: unresolved)
+                              unresolved: unresolved,
+                              isTruncated: isTruncated,
+                              unresolvedTruncated: unresolvedTruncated)
         // 层级统计
         var counts: [Int: Int] = [:]
         for n in nodes { counts[n.level, default: 0] += 1 }

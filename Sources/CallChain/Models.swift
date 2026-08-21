@@ -119,3 +119,15 @@ struct SearchHit: Identifiable {
     let line: Int                // 命中行（definition 命中时 = 定义行）
     let code: String             // 命中行原文
 }
+
+// MARK: - 语句焦点
+
+/// 用户从全文搜索中选中的具体语句。
+/// 调用链仍以语句所属定义为锚点，但界面会保留这条语句并突出它对应的调用边。
+struct StatementFocus: Identifiable, Equatable {
+    var id: String { "\(file)::\(line)::\(ownerDefinitionID)" }
+    let file: String
+    let line: Int
+    let code: String
+    let ownerDefinitionID: String
+}

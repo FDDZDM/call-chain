@@ -29,10 +29,12 @@ final class ProjectStore: ObservableObject {
     @Published var searchInfo = ""                // 状态栏提示（耗时/行数）
 
     @Published var anchor: Definition?
+    @Published var focusedStatement: StatementFocus?
     @Published var graph: CallGraph?
     @Published var selectedNodeID: String?
     @Published var callerDepth = 2
     @Published var callDepth = 2
+    @Published var showsFullChain = false
     @Published var fitRequestID = 0              // 递增即触发画布重新适配
 
     @Published var previewFilePath: String?
@@ -142,6 +144,7 @@ final class ProjectStore: ObservableObject {
         self.expandedDirs = []
         self.currentFile = session.files.first?.relPath
         self.anchor = nil
+        self.focusedStatement = nil
         self.graph = nil
         self.selectedNodeID = nil
         self.results = []
@@ -198,20 +201,39 @@ final class ProjectStore: ObservableObject {
     // MARK: 锚点与构图
 
     /// 把某个定义设为锚点并重建调用链图
-    func anchorDefinition(_ def: Definition) {
+    func anchorDefinition(_ def: Definition, statement: StatementFocus? = nil) {
         anchor = def
+        focusedStatement = statement
         selectedNodeID = def.id
         rebuildGraph()
     }
 
+    /// 搜索结果可能是一条普通语句：保留命中行，同时以其所属函数构建完整上下游。
+    func anchorSearchHit(_ hit: SearchHit) {
+        let statement: StatementFocus? = hit.kind == .text
+            ? StatementFocus(file: hit.definition.file,
+                             line: hit.line,
+                             code: hit.code,
+                             ownerDefinitionID: hit.definition.id)
+            : nil
+        anchorDefinition(hit.definition, statement: statement)
+    }
+
     func rebuildGraph() {
         guard let anchor else { graph = nil; return }
+        let downstreamDepth = showsFullChain ? Int.max : callDepth
+        let upstreamDepth = showsFullChain ? Int.max : callerDepth
         var g = GraphBuilder.build(allDefs: allDefs, target: anchor,
-                                   callDepth: callDepth, callerDepth: callerDepth)
+                                   callDepth: downstreamDepth,
+                                   callerDepth: upstreamDepth)
         GraphLayout.layout(&g)
         graph = g
         selectedNodeID = anchor.id
-        showSnippet(file: anchor.file, line: anchor.line)
+        if let focus = focusedStatement, focus.ownerDefinitionID == anchor.id {
+            showSnippet(file: focus.file, line: focus.line)
+        } else {
+            showSnippet(file: anchor.file, line: anchor.line)
+        }
     }
 
     /// 点击文件的处理：设为当前文件，并默认锚到它的第一个定义
@@ -236,6 +258,11 @@ final class ProjectStore: ObservableObject {
 
     func node(id: String) -> GraphNode? {
         graph?.nodes.first { $0.id == id }
+    }
+
+    /// 选中函数的离线作用说明。优先使用源码注释，缺失时提供可核验的结构推断。
+    func insight(for definition: Definition) -> FunctionInsight {
+        FunctionExplainer.explain(definition, in: fileIndex[definition.file])
     }
 
     /// 显示某文件某行附近的源码片段（预览面板）

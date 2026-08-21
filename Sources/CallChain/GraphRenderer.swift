@@ -14,21 +14,29 @@ enum GraphRenderer {
 
     /// 绘制整张图（两种画布共用：交互 Canvas 与导出快照）
     static func draw(context: inout GraphicsContext, size: CGSize,
-                     graph: CallGraph, selectedID: String?) {
+                     graph: CallGraph, selectedID: String?,
+                     focusedStatement: StatementFocus? = nil) {
         let nodeById = Dictionary(uniqueKeysWithValues: graph.nodes.map { ($0.id, $0) })
 
         // ---- 边（先画，垫底） ----
         for edge in graph.edges {
             guard let from = nodeById[edge.from], let to = nodeById[edge.to] else { continue }
             let path = edgePath(from: from, to: to)
-            context.stroke(path, with: .color(.primary.opacity(0.28)),
-                           style: StrokeStyle(lineWidth: 1.3,
+            let isFocusedEdge = focusedStatement.map { focus in
+                edge.sites.contains { $0.file == focus.file && $0.line == focus.line }
+            } ?? false
+            context.stroke(path,
+                           with: .color(isFocusedEdge
+                                       ? Color.accentColor.opacity(0.95)
+                                       : Color.primary.opacity(0.28)),
+                           style: StrokeStyle(lineWidth: isFocusedEdge ? 3.0 : 1.3,
                                               lineCap: .round, lineJoin: .round))
             // 箭头（自递归环不画）
             if from.id != to.id,
                let arrow = arrowhead(at: path.currentPoint ?? .zero,
                                      direction: to.level > from.level ? .down : .up) {
-                context.fill(arrow, with: .color(.primary.opacity(0.35)))
+                context.fill(arrow, with: .color(isFocusedEdge
+                             ? Color.accentColor : Color.primary.opacity(0.35)))
             }
         }
 
