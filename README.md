@@ -7,9 +7,13 @@
 
 - **多语言**：Kotlin / Java / Swift / TypeScript / JavaScript / C/C++ / Python / Go / ObjC，
   纯正则解析，零第三方依赖，离线可用
+- **语句级查询**：全文命中后保留准确语句与行号，以其所属函数为锚点展开上下游，
+  并在图中加粗该语句实际产生的调用边
+- **函数作用说明**：优先展示源码注释；缺少注释时，根据函数名、实现范围与关键调用
+  给出明确标注的离线推断，所有依据都可直接核对
 - **全局 / 局部查询**：全局=整个项目，局部=当前选中的文件
 - **调用链图**：Canvas 原生绘制，拖拽平移、双指缩放、单击选中、双击以节点为中心重建、
-  空白双击复位；调用者/被调用者深度可调（1–5 层）
+  空白双击复位；调用者/被调用者深度可调（1–5 层），也可一键展开完整可达链路
 - **详情检查器**：选中节点后列出它调用了谁、谁调用了它（带全部调用点），点击调用点
   查看源码上下文（高亮行），一键用 Xcode（xed）定位打开
 - **导出 PNG**：按图包围盒高清导出
@@ -38,6 +42,7 @@ open ~/Applications/CallChain.app
 ```bash
 .build/release/CallChain --analyze ~/Projects/coros_app \
     --symbol saveSession --callers 2 --callees 2
+.build/release/CallChain --analyze ~/Projects/coros_app --symbol saveSession --full
 .build/release/CallChain --analyze ~/Projects/coros_app --symbol ExploreStore --json
 .build/release/CallChain --analyze <目录> --symbol <名称> --exclude build,node_modules --maxfiles 3000
 ```
@@ -79,3 +84,4 @@ Sources/CallChain/
   扫描阶段 15 秒硬超时（防止巨型构建缓存拖垮工具）；跳过 hidden/构建/依赖目录
 
 若要精确解析（语法树级别），可后续接入 tree-sitter 作为可选后端。
+# call-chain
