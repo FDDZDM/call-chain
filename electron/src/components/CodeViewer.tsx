@@ -1,6 +1,5 @@
 // CodeViewer —— Monaco 只读代码查看器 + 多标签
-// spec 4.2：只读模式、多标签(LRU 上限 8)、切换 tab 记住滚动位置
-// spec 4.3：⌘+点击函数名 → onSymbolClick 回调
+// 深色主题 · 文件类型图标 · ⌘+点击触发调用链
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import * as monaco from 'monaco-editor'
@@ -20,11 +19,39 @@ interface Props {
   pendingFile: string | null
   onFileConsumed: () => void
   onError: (msg: string) => void
-  /** ⌘+点击函数名回调（file, line, col） */
   onSymbolClick: (file: string, line: number, col: number) => void
 }
 
 const MAX_TABS = 8
+
+// 文件扩展名 → 图标颜色
+function fileIconColor(filename: string): string {
+  const ext = filename.split('.').pop()?.toLowerCase() || ''
+  const colorMap: Record<string, string> = {
+    ts: '#3178c6', tsx: '#3178c6',
+    js: '#f7df1e', jsx: '#f7df1e', mjs: '#f7df1e',
+    py: '#3776ab',
+    java: '#ed8b00',
+    kt: '#7f52ff', kts: '#7f52ff',
+    swift: '#f05138',
+    css: '#264de4',
+    html: '#e34c26',
+    json: '#cbcb41',
+    md: '#519aba',
+  }
+  return colorMap[ext] || '#8a8f9c'
+}
+
+// 文件图标（SVG，带类型色标）
+function FileIcon({ filename }: { filename: string }) {
+  const color = fileIconColor(filename)
+  return (
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }} className="tab-file-icon">
+      <path d="M3 1.5h7l3 3v10H3V1.5z" stroke={color} strokeWidth="1.1" fill={color + '18'} strokeLinejoin="round"/>
+      <path d="M10 1.5v3h3" stroke={color} strokeWidth="1.1" fill="none" strokeLinejoin="round"/>
+    </svg>
+  )
+}
 
 export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, onError, onSymbolClick }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -33,23 +60,21 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
   const [activeRelPath, setActiveRelPath] = useState<string | null>(null)
   const [modPressed, setModPressed] = useState(false)
   const modPressedRef = useRef(false)
-  // 用 ref 保存最新 tabs，避免闭包陈旧
   const tabsRef = useRef<Tab[]>([])
   tabsRef.current = tabs
   const activeRelPathRef = useRef<string | null>(null)
   activeRelPathRef.current = activeRelPath
 
-  // 初始化 Monaco editor（只读）
   useEffect(() => {
     if (!containerRef.current) return
     const editor = monaco.editor.create(containerRef.current, {
       readOnly: true,
-      theme: 'vs',
+      theme: 'vs-dark',
       automaticLayout: true,
       minimap: { enabled: true, maxColumn: 80 },
       fontSize: 13,
       lineHeight: 20,
-      fontFamily: 'ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace',
+      fontFamily: 'ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo, monospace',
       scrollBeyondLastLine: false,
       renderWhitespace: 'selection',
       tabSize: 2,
@@ -57,16 +82,19 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
       lineNumbers: 'on',
       folding: true,
       smoothScrolling: true,
+      scrollbar: {
+        verticalScrollbarSize: 8,
+        horizontalScrollbarSize: 8,
+        useShadows: false,
+      },
     })
     editorRef.current = editor
 
-    // 悬停装饰：⌘按下时给鼠标下的单词加下划线
     let hoverDecos: string[] = []
     const clearHover = () => {
       if (hoverDecos.length > 0) hoverDecos = editor.deltaDecorations(hoverDecos, [])
     }
 
-    // spec 4.3：⌘按下时 onMouseMove → 检测单词 → 加 underline 装饰
     editor.onMouseMove((e) => {
       if (!modPressedRef.current) { clearHover(); return }
       if (e.target.type !== monaco.editor.MouseTargetType.CONTENT_TEXT) { clearHover(); return }
@@ -78,15 +106,12 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
       if (!word) { clearHover(); return }
       hoverDecos = editor.deltaDecorations(hoverDecos, [{
         range: new monaco.Range(pos.lineNumber, word.startColumn, pos.lineNumber, word.endColumn),
-        options: {
-          inlineClassName: 'symbol-hover',
-        }
+        options: { inlineClassName: 'symbol-hover' }
       }])
     })
 
     editor.onMouseLeave(() => { clearHover() })
 
-    // spec 4.3：⌘+点击检测
     editor.onMouseDown((e) => {
       const hasMod = e.event.metaKey || e.event.ctrlKey
       if (!hasMod) return
@@ -104,7 +129,6 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 监听修饰键状态，更新光标样式（spec 4.3 按键提示）
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey) { setModPressed(true); modPressedRef.current = true }
@@ -120,11 +144,9 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
     }
   }, [])
 
-  // 切换 tab：保存当前 viewState，加载目标 model + viewState
   const switchTab = useCallback((relPath: string) => {
     const editor = editorRef.current
     if (!editor) return
-    // 保存当前 tab 的 viewState
     if (activeRelPath) {
       const cur = tabsRef.current.find((t) => t.relPath === activeRelPath)
       if (cur) cur.viewState = editor.saveViewState()
@@ -137,15 +159,12 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
     }
   }, [activeRelPath])
 
-  // 打开/激活文件
   const openFile = useCallback(async (relPath: string) => {
-    // 已打开：激活
     const existing = tabsRef.current.find((t) => t.relPath === relPath)
     if (existing) {
       switchTab(relPath)
       return
     }
-    // 读取文件内容
     const result = await window.callchain.readFile(projectPath, relPath)
     if (!result.content) {
       onError(`无法读取 ${relPath}（${result.encoding}）`)
@@ -158,7 +177,6 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
 
     setTabs((prev) => {
       const next = [...prev, newTab]
-      // LRU：超上限关闭最旧
       if (next.length > MAX_TABS) {
         const removed = next.shift()!
         removed.model.dispose()
@@ -166,10 +184,8 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
       return next
     })
 
-    // 切换到新 tab
     const editor = editorRef.current
     if (editor) {
-      // 保存当前 viewState
       if (activeRelPath) {
         const cur = tabsRef.current.find((t) => t.relPath === activeRelPath)
         if (cur) cur.viewState = editor.saveViewState()
@@ -179,13 +195,11 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
     }
   }, [projectPath, activeRelPath, switchTab, onError])
 
-  // 监听 pendingFile 变化
   useEffect(() => {
     if (!pendingFile) return
     openFile(pendingFile).then(() => onFileConsumed())
   }, [pendingFile, openFile, onFileConsumed])
 
-  // 关闭 tab
   const closeTab = useCallback((relPath: string) => {
     setTabs((prev) => {
       const idx = prev.findIndex((t) => t.relPath === relPath)
@@ -193,7 +207,6 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
       const removed = prev[idx]
       removed.model.dispose()
       const next = prev.filter((t) => t.relPath !== relPath)
-      // 如果关的是当前 tab，切换到相邻
       if (activeRelPath === relPath) {
         const newActive = next[idx] || next[idx - 1] || null
         if (newActive) {
@@ -209,8 +222,6 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
     })
   }, [activeRelPath])
 
-  // 始终渲染容器，避免空 tab 时 containerRef 为 null 导致 Monaco 永不初始化。
-  // 空状态用 overlay 覆盖在容器上方，而非条件渲染容器本身。
   const isEmpty = tabs.length === 0
 
   return (
@@ -224,6 +235,7 @@ export default function CodeViewer({ projectPath, pendingFile, onFileConsumed, o
               onClick={() => switchTab(tab.relPath)}
               title={tab.relPath}
             >
+              <FileIcon filename={tab.name} />
               <span className="tab-name">{tab.name}</span>
               <button
                 className="tab-close"

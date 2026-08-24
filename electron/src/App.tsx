@@ -1,6 +1,5 @@
 // App —— 渲染进程根组件
-// spec 4.1：两栏布局 + 项目树抽屉
-// spec 4.3：⌘+点击函数名 → Worker 构建调用图 → SVG 渲染
+// 深色主题 · 三栏布局 · 紫色品牌色
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import ProjectTree from './components/ProjectTree'
@@ -8,18 +7,17 @@ import CodeViewer from './components/CodeViewer'
 import CallGraphView from './components/CallGraphView'
 import { useAnalyzer } from './hooks/useAnalyzer'
 import type { TreeNode } from './types'
-import type { Language } from './types/models'
+import type { Language, GraphNode } from './types/models'
 
 const isMac = navigator.platform.toLowerCase().includes('mac')
 const MOD = isMac ? '⌘' : 'Ctrl+'
+const OPEN_KEY = isMac ? '⌘O' : 'Ctrl+O'
 
-// 按扩展名判断是否为支持的源文件
-const SOURCE_EXTS = new Set(['ts', 'tsx', 'js', 'jsx', 'mjs', 'py', 'java', 'kt', 'kts'])
+const SOURCE_EXTS = new Set(['ts', 'tsx', 'js', 'jsx', 'mjs', 'py', 'java', 'kt', 'kts', 'swift', 'css', 'html', 'json', 'md'])
 function isSourceFile(name: string): boolean {
   const ext = name.split('.').pop()?.toLowerCase() || ''
   return SOURCE_EXTS.has(ext)
 }
-// 扩展名 → Language
 function extToLang(filename: string): Language {
   const ext = filename.split('.').pop()?.toLowerCase() || ''
   switch (ext) {
@@ -28,10 +26,9 @@ function extToLang(filename: string): Language {
     case 'py': return 'python'
     case 'java': return 'java'
     case 'kt': case 'kts': return 'kotlin'
-    default: return 'typescript' // fallback
+    default: return 'typescript'
   }
 }
-// 递归收集所有源文件
 function collectSourceFiles(nodes: TreeNode[], acc: { path: string; language: Language }[] = []) {
   for (const n of nodes) {
     if (n.type === 'dir') {
@@ -43,6 +40,17 @@ function collectSourceFiles(nodes: TreeNode[], acc: { path: string; language: La
   return acc
 }
 
+// Logo SVG（紫色品牌标志）
+function LogoIcon({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none">
+      <rect x="14" y="2" width="4" height="28" rx="2" fill="#6c5ce7" />
+      <ellipse cx="16" cy="8" rx="10" ry="4" fill="none" stroke="#6c5ce7" strokeWidth="3" />
+      <ellipse cx="16" cy="24" rx="10" ry="4" fill="none" stroke="#6c5ce7" strokeWidth="3" />
+    </svg>
+  )
+}
+
 export default function App() {
   const [projectPath, setProjectPath] = useState<string | null>(null)
   const [tree, setTree] = useState<TreeNode[] | null>(null)
@@ -50,13 +58,13 @@ export default function App() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pendingFile, setPendingFile] = useState<string | null>(null)
+  const [activeFile, setActiveFile] = useState<string | null>(null)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [isGraphFullscreen, setIsGraphFullscreen] = useState(false)
 
   const { graph, progress, parseProject, parseFile, resolveSymbolAt, buildGraph, reset } = useAnalyzer()
   const parsingRef = useRef(false)
 
-  // ⌘\ 切换抽屉 / Esc 退出全屏
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
@@ -71,7 +79,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [isGraphFullscreen])
 
-  // 后台批量解析源文件：逐文件读取 + 发给 Worker
   const parseSourceFiles = useCallback(async (root: string, files: { path: string; language: Language }[]) => {
     if (parsingRef.current) return
     parsingRef.current = true
@@ -94,13 +101,11 @@ export default function App() {
     reset()
     setTree(null)
     setTreeLoading(true)
-    setDrawerOpen(true) // 打开项目后自动展开项目树抽屉
+    setDrawerOpen(true)
     try {
       const result = (await window.callchain.scanDir(dir)) as TreeNode[]
       setTree(result)
-      // 后台解析所有源文件
       const files = collectSourceFiles(result)
-      // 先通知Worker要解析的文件总数，用于进度条
       parseProject(files)
       parseSourceFiles(dir, files)
     } catch (err: any) {
@@ -110,12 +115,11 @@ export default function App() {
     }
   }, [reset, parseProject, parseSourceFiles])
 
-  // 点项目树文件打开代码 tab
   const handleOpenFile = useCallback((relPath: string) => {
     setPendingFile(relPath)
+    setActiveFile(relPath)
   }, [])
 
-  // ⌘+点击 Monaco 里的函数名 → 查找符号 → 构建图
   const handleSymbolClick = useCallback(async (file: string, line: number, col: number) => {
     const symbol = await resolveSymbolAt(file, line, col)
     if (symbol) {
@@ -135,23 +139,30 @@ export default function App() {
     }
   }, [resolveSymbolAt, buildGraph, progress])
 
-  // 双击图节点 → 以它为新锚点重建
   const handleReanchor = useCallback((id: string) => {
     buildGraph(id)
     setSelectedNodeId(null)
   }, [buildGraph])
 
+  // 点击图节点 → 选中并在详情面板展示
+  const handleSelectNode = useCallback((id: string | null) => {
+    setSelectedNodeId(id)
+  }, [])
+
   const isParsing = progress.total > 0 && progress.parsed < progress.total
-  // 解析完成后仍显示进度条（展示函数总数），直到生成调用图后隐藏
-  const showParseBar = projectPath && progress.total > 0 && !graph
+  const showParseBar = projectPath && progress.total > 0 && (isParsing || !graph)
+
+  // 路径缩短显示
+  const shortProjectPath = projectPath
+    ? (projectPath.includes('/') ? '~/' + projectPath.split('/').slice(-2).join('/') : projectPath)
+    : ''
 
   return (
     <div className="app">
       <TopBar
-        projectPath={projectPath}
-        drawerOpen={drawerOpen}
-        onToggleDrawer={() => setDrawerOpen((o) => !o)}
+        projectPath={shortProjectPath}
         onOpenProject={openProject}
+        onToggleDrawer={() => setDrawerOpen((o) => !o)}
       />
       {showParseBar && (
         <ParseProgress parsed={progress.parsed} total={progress.total} totalFunctions={progress.totalFunctions} />
@@ -163,9 +174,10 @@ export default function App() {
         ) : (
           <>
             {drawerOpen && (
-              <Drawer
+              <Sidebar
                 tree={tree}
                 loading={treeLoading}
+                activeFile={activeFile}
                 onClose={() => setDrawerOpen(false)}
                 onOpenFile={handleOpenFile}
               />
@@ -184,23 +196,26 @@ export default function App() {
                 <CallGraphView
                   graph={graph}
                   selectedId={selectedNodeId}
-                  onSelect={setSelectedNodeId}
+                  onSelect={handleSelectNode}
                   onReanchor={handleReanchor}
                   isParsing={isParsing}
                   isFullscreen={isGraphFullscreen}
                   onToggleFullscreen={() => setIsGraphFullscreen((f) => !f)}
                 />
               </div>
-              <div className="inspector-pane">
-                <InspectorPlaceholder graph={graph} selectedId={selectedNodeId} />
-              </div>
+              <InspectorPanel
+                graph={graph}
+                selectedId={selectedNodeId}
+                onReanchor={handleReanchor}
+                onSelectNode={handleSelectNode}
+              />
             </div>
             {isGraphFullscreen && (
               <div className="graph-fullscreen-overlay">
                 <CallGraphView
                   graph={graph}
                   selectedId={selectedNodeId}
-                  onSelect={setSelectedNodeId}
+                  onSelect={handleSelectNode}
                   onReanchor={handleReanchor}
                   isFullscreen
                   onToggleFullscreen={() => setIsGraphFullscreen(false)}
@@ -218,63 +233,78 @@ export default function App() {
 // ── 子组件 ──
 
 function ParseProgress({ parsed, total, totalFunctions }: { parsed: number; total: number; totalFunctions: number }) {
-  const pct = total > 0 ? Math.round((parsed / total) * 100) : 0
   const done = parsed >= total
+  const pct = total > 0 ? Math.round((parsed / total) * 100) : 0
   return (
-    <div className={`parse-progress-bar ${done ? 'parse-progress-done' : ''}`}>
+    <div className={`parse-progress-bar ${done ? 'parse-progress-done' : ''}`} style={{ position: 'relative' }}>
       <div className="parse-progress-info">
-        <span className="parse-progress-text">
-          {done
-            ? `解析完成 · 已提取 ${totalFunctions} 个函数符号`
-            : `正在解析项目代码… ${parsed}/${total}（已发现 ${totalFunctions} 个函数）`}
-        </span>
-        <span className="parse-progress-pct">{done ? '✓' : `${pct}%`}</span>
+        {done ? (
+          <>
+            <span className="parse-progress-check">✓</span>
+            <span className="parse-progress-text">解析完成 · 已提取 {totalFunctions} 个函数符号</span>
+          </>
+        ) : (
+          <>
+            <span className="parse-progress-check" style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid var(--purple)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            <span className="parse-progress-text">正在解析项目代码… {parsed}/{total}（已发现 {totalFunctions} 个函数）</span>
+          </>
+        )}
       </div>
       <div className="parse-progress-track">
         <div className="parse-progress-fill" style={{ width: `${done ? 100 : pct}%` }} />
       </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
 
-function TopBar({ projectPath, drawerOpen, onToggleDrawer, onOpenProject }: {
+function TopBar({ projectPath, onOpenProject, onToggleDrawer }: {
   projectPath: string | null
-  drawerOpen: boolean
-  onToggleDrawer: () => void
   onOpenProject: () => void
+  onToggleDrawer: () => void
 }) {
   return (
     <header className="topbar">
       <div className="topbar-left">
-        <button
-          className="icon-btn"
-          onClick={onToggleDrawer}
-          title={`${MOD}\\ 项目树`}
-          style={{ opacity: drawerOpen ? 1 : 0.6 }}
-        >☰</button>
+        <button className="icon-btn" onClick={onToggleDrawer} title={`${MOD}\\ 项目树`}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="1.5" rx="0.75" fill="currentColor"/><rect x="1" y="7.5" width="14" height="1.5" rx="0.75" fill="currentColor"/><rect x="1" y="12" width="14" height="1.5" rx="0.75" fill="currentColor"/></svg>
+        </button>
+        <div className="topbar-logo"><LogoIcon size={20} /></div>
         <span className="brand">CallChain</span>
-        {projectPath && <span className="path">{projectPath}</span>}
+        {projectPath && (
+          <>
+            <span className="brand-divider" />
+            <span className="path">{projectPath}</span>
+          </>
+        )}
       </div>
-      <button className="btn" onClick={onOpenProject}>{MOD}O 打开项目</button>
+      <button className="btn-primary" onClick={onOpenProject}>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 3h3l1.5 1.5H12v7H2V3z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" fill="none"/></svg>
+        打开项目
+      </button>
     </header>
   )
 }
 
-function Drawer({ tree, loading, onClose, onOpenFile }: {
+function Sidebar({ tree, loading, activeFile, onClose, onOpenFile }: {
   tree: TreeNode[] | null
   loading: boolean
+  activeFile: string | null
   onClose: () => void
   onOpenFile: (relPath: string) => void
 }) {
   return (
-    <div className="drawer">
-      <div className="drawer-header">
-        <span>项目结构</span>
-        <button className="icon-btn" onClick={onClose} title="收起">×</button>
+    <div className="sidebar">
+      <div className="sidebar-header">
+        <span className="sidebar-header-title">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M1.5 3.5h5l1.5 1.5h6.5v7.5h-13V3.5z" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinejoin="round"/></svg>
+          项目结构
+        </span>
+        <button className="sidebar-close" onClick={onClose} title="收起">×</button>
       </div>
-      <div className="drawer-body">
+      <div className="sidebar-body">
         {loading && <div className="tree-loading">扫描中…</div>}
-        {!loading && tree && <ProjectTree nodes={tree} onOpenFile={onOpenFile} />}
+        {!loading && tree && <ProjectTree nodes={tree} activeFile={activeFile} onOpenFile={onOpenFile} />}
         {!loading && !tree && <div className="tree-empty">无文件</div>}
       </div>
     </div>
@@ -284,30 +314,241 @@ function Drawer({ tree, loading, onClose, onOpenFile }: {
 function EmptyState({ onOpen, error }: { onOpen: () => void; error: string | null }) {
   return (
     <div className="empty">
-      <div className="logo">⛓</div>
-      <h1>CallChain · 代码调用链查看器</h1>
-      <p>{MOD}O 打开一个项目目录，{MOD}+点击函数名查看调用链</p>
-      <button className="btn-primary" onClick={onOpen}>打开项目…</button>
-      {error && <p className="error">{error}</p>}
+      <div className="empty-bg">
+        <div className="empty-blob empty-blob-1" />
+        <div className="empty-blob empty-blob-2" />
+        <div className="empty-blob empty-blob-3" />
+      </div>
+      <div className="empty-content">
+        <div className="empty-logo"><LogoIcon size={72} /></div>
+        <h1>CallChain</h1>
+        <p className="empty-desc">
+          代码调用链查看器 — 打开任意项目，<kbd>⌘</kbd>+点击函数名即可可视化调用链
+        </p>
+        <button className="btn-primary empty-btn" onClick={onOpen}>
+          <svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 3h3l1.5 1.5H12v7H2V3z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" fill="none"/></svg>
+          打开项目…
+        </button>
+        <div className="empty-features">
+          <span className="empty-feature">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 3l3.5 3L1 9M7 9h4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg>
+            多语言解析
+          </span>
+          <span className="empty-feature">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="3" cy="6" r="2" fill="none" stroke="currentColor" strokeWidth="1.2"/><circle cx="9" cy="3" r="2" fill="none" stroke="currentColor" strokeWidth="1.2"/><circle cx="9" cy="9" r="2" fill="none" stroke="currentColor" strokeWidth="1.2"/><path d="M4.8 5.2L7.2 3.8M4.8 6.8L7.2 8.2" stroke="currentColor" strokeWidth="1.2"/></svg>
+            调用链图
+          </span>
+          <span className="empty-feature">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" strokeWidth="1.2"/><path d="M4 4h4M4 6h4M4 8h2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
+            语句级查询
+          </span>
+        </div>
+        <div className="empty-shortcuts">
+          <span>快捷键 <kbd>{OPEN_KEY}</kbd> 打开项目</span>
+          <span>·</span>
+          <span><kbd>⌘</kbd>+点击函数名查看调用链</span>
+        </div>
+        {error && <p className="error" style={{ marginTop: 20 }}>{error}</p>}
+      </div>
     </div>
   )
 }
 
-function InspectorPlaceholder({ graph, selectedId }: { graph: any; selectedId: string | null }) {
+// ── 节点详情面板（右下区域，替代原来的 InspectorPlaceholder）──
+function categoryDotClass(cat: string): string {
+  switch (cat) {
+    case 'io': return 'dot-io'
+    case 'util': return 'dot-util'
+    case 'handler': return 'dot-handler'
+    case 'thirdparty': return 'dot-thirdparty'
+    default: return 'dot-core'
+  }
+}
+
+function InspectorPanel({ graph, selectedId, onReanchor, onSelectNode }: {
+  graph: any
+  selectedId: string | null
+  onReanchor: (id: string) => void
+  onSelectNode: (id: string | null) => void
+}) {
   if (!graph) {
-    return <div className="placeholder"><div className="placeholder-label">详情检查器</div><div className="placeholder-hint">⌘+点击函数名生成调用链</div></div>
+    return (
+      <div className="inspector-pane">
+        <div className="placeholder">
+          <div className="placeholder-label">详情检查器</div>
+          <div className="placeholder-hint">⌘+点击函数名生成调用链</div>
+        </div>
+      </div>
+    )
   }
   if (!selectedId) {
-    return <div className="placeholder"><div className="placeholder-label">详情检查器</div><div className="placeholder-hint">单击图中的节点查看详情</div></div>
+    // 没有选中节点时，显示锚点信息
+    const anchor = graph.anchor
+    return (
+      <div className="inspector-pane">
+        <div className="inspector-head">
+          <div className="inspector-name">{anchor.name}</div>
+          {anchor.className && <div className="inspector-class">{anchor.className}</div>}
+          <div className="inspector-file">{anchor.file}:{anchor.startLine}</div>
+        </div>
+        <div className="inspector-divider" />
+        <div className="inspector-section">
+          <div className="inspector-section-title">提示</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+            单击图中节点查看调用详情，双击节点以其为中心重建调用链。
+          </div>
+        </div>
+      </div>
+    )
   }
-  const node = graph.nodes.find((n: any) => n.id === selectedId)
-  if (!node) return null
+
+  const node = graph.nodes.find((n: GraphNode) => n.id === selectedId)
+  if (!node) {
+    return (
+      <div className="inspector-pane">
+        <div className="placeholder">
+          <div className="placeholder-hint">节点未找到</div>
+        </div>
+      </div>
+    )
+  }
+
+  const isAgg = node.nodeType === 'aggregate'
+  const qualName = (n: GraphNode) => `${n.def.className ? n.def.className + '.' : ''}${n.def.name}`
+  const nodeMap = new Map<string, GraphNode>(graph.nodes.map((n: GraphNode) => [n.id, n]))
+
+  // 收集调用者（上游：指向该节点的边的 from 节点）
+  const callers: GraphNode[] = []
+  const callees: GraphNode[] = []
+  for (const e of graph.edges) {
+    if (e.to === node.id) {
+      const cn = nodeMap.get(e.from)
+      if (cn && cn.nodeType === 'function') callers.push(cn)
+    }
+    if (e.from === node.id) {
+      const cn = nodeMap.get(e.to)
+      if (cn && cn.nodeType === 'function') callees.push(cn)
+    }
+  }
+
+  // 清理文档注释
+  const cleanDoc = (d: string) =>
+    d.replace(/^\/\*\*?/, '').replace(/\*\/$/, '')
+      .split('\n').map((l: string) => l.replace(/^\s*\*\s?/, '').trim())
+      .filter(Boolean).slice(0, 5).join('\n')
+  const doc = isAgg ? null : (node.def.docComment ? cleanDoc(node.def.docComment) : null)
+
+  // 获取与锚点的调用边（调用代码）
+  const parentEdge = node.parentId
+    ? graph.edges.find((e: any) =>
+      (e.from === node.parentId && e.to === node.id) || (e.from === node.id && e.to === node.parentId)
+    )
+    : null
+  const parentNode = node.parentId ? nodeMap.get(node.parentId) : null
+
   return (
-    <div className="inspector">
-      <div className="inspector-head">
-        <div className="inspector-name">{node.def.name}</div>
-        {node.def.className && <div className="inspector-class">{node.def.className}</div>}
-        <div className="inspector-file">{node.def.file}:{node.def.startLine}</div>
+    <div className="inspector-pane" onClick={() => onSelectNode(null)}>
+      <div className="inspector" onClick={(e) => e.stopPropagation()}>
+        <div className="inspector-head">
+          <div className="inspector-name">
+            {isAgg ? `🔧 ${node.aggregatedCount} 个工具函数` : qualName(node)}
+            {!isAgg && <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '13px' }}>{node.def.paramSignature}</span>}
+          </div>
+          {!isAgg && node.def.className && <div className="inspector-class">{node.def.className}</div>}
+          {!isAgg && <div className="inspector-file">{node.def.file}:{node.def.startLine}</div>}
+        </div>
+
+        {doc && (
+          <>
+            <div className="inspector-divider" />
+            <div className="inspector-section">
+              <div className="inspector-doc" style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                {doc}
+              </div>
+            </div>
+          </>
+        )}
+
+        {isAgg && node.aggregatedIds && (
+          <>
+            <div className="inspector-divider" />
+            <div className="inspector-section">
+              <div className="inspector-section-title">包含的工具函数</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+                {node.aggregatedIds
+                  .map((mid: string) => { const m = nodeMap.get(mid); return m ? m.def.name : '' })
+                  .filter(Boolean).join('、')}
+              </div>
+            </div>
+          </>
+        )}
+
+        {callers.length > 0 && (
+          <>
+            <div className="inspector-divider" />
+            <div className="inspector-section">
+              <div className="inspector-section-title">调用了</div>
+              {callers.map((cn) => (
+                <div
+                  key={cn.id}
+                  className="inspector-item"
+                  onClick={() => { onSelectNode(cn.id); onReanchor(cn.id) }}
+                >
+                  <span className={`inspector-dot ${categoryDotClass(cn.category)}`} />
+                  <span className="inspector-item-name">{qualName(cn)}</span>
+                  <span className="inspector-item-file">{cn.def.file.split('/').pop()}:{cn.def.startLine}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {callees.length > 0 && (
+          <div className="inspector-section">
+            <div className="inspector-section-title">被调用</div>
+            {callees.map((cn) => (
+              <div
+                key={cn.id}
+                className="inspector-item"
+                onClick={() => { onSelectNode(cn.id); onReanchor(cn.id) }}
+              >
+                <span className={`inspector-dot ${categoryDotClass(cn.category)}`} />
+                <span className="inspector-item-name">{qualName(cn)}</span>
+                <span className="inspector-item-file">{cn.def.file.split('/').pop()}:{cn.def.startLine}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {parentEdge && parentNode && parentEdge.sites?.[0] && (
+          <>
+            <div className="inspector-divider" />
+            <div className="inspector-section">
+              <div className="inspector-section-title">
+                {node.level > 0 ? `由 ${qualName(parentNode)} 调用` : `调用了 ${qualName(parentNode)}`}
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '4px', fontFamily: 'var(--mono-font)' }}>
+                {parentEdge.sites[0].file.split('/').pop()}:{parentEdge.sites[0].line}
+              </div>
+              {parentEdge.sites[0].code?.trim() && (
+                <div style={{
+                  fontFamily: 'var(--mono-font)', fontSize: '10px',
+                  color: 'var(--orange)', background: 'rgba(255,170,0,0.08)',
+                  padding: '6px 8px', borderRadius: '4px',
+                  borderLeft: '2px solid var(--orange)',
+                  wordBreak: 'break-all', whiteSpace: 'pre-wrap',
+                }}>
+                  {parentEdge.sites[0].code.trim().slice(0, 150)}
+                </div>
+              )}
+              {parentEdge.sites.length > 1 && (
+                <div style={{ fontSize: '10px', color: 'var(--green)', marginTop: '4px' }}>
+                  共 {parentEdge.sites.length} 处调用
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

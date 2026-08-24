@@ -1,11 +1,15 @@
 // src/analyzer/graphBuilder.ts
-// 双向 BFS 构建 CallGraph + 父子树关系
+// 链路语义 BFS 构建 CallGraph + 父子树关系
 //
-// 核心改进：
-// 1. BFS 追踪 parentId/childIds，支持渐进式展开
-// 2. 函数分类：core/io/util/handler/thirdparty
-// 3. 智能聚合：连续工具函数折叠
-// 4. 均衡探索：交替展开调用者和被调用者
+// 核心设计（调用链语义）：
+// 1. 展开方向与链路方向严格一致：
+//    - 锚点（level 0）：childIds = 调用者（向左）+ 被调用者（向右）
+//    - 调用者（level < 0）：childIds = 只显示它的调用者（继续向左）
+//    - 被调用者（level > 0）：childIds = 只显示它的被调用者（继续向右）
+//    这样每次展开只沿链路向外延伸一步，不会展开出旁支，节点线性增长
+// 2. level = 真实有向距离（-k 上游 k 层，+k 下游 k 层），非锚点不会混入 level 0
+// 3. 函数分类：core/io/util/handler/thirdparty
+// 4. 智能聚合：同一父节点同一方向的连续工具函数折叠为 🔧 簇
 
 import type {
   CallGraph,
@@ -52,6 +56,15 @@ export function classifyFunction(def: FunctionSymbol): FuncCategory {
   return 'core'
 }
 
+// 分类优先级：展开时新邻居按相关性排序（core > handler > io > util）
+export const CATEGORY_RANK: Record<FuncCategory, number> = {
+  core: 0,
+  handler: 1,
+  io: 2,
+  thirdparty: 3,
+  util: 4,
+}
+
 const NODE_W = 200
 const NODE_H = 48
 
@@ -83,8 +96,12 @@ export function buildGraph(
     }
   }
 
-  // 双向 BFS（追踪 parent）
+  // ── 链路语义 BFS ──
+  // 规则：
+  //   锚点（level 0）双向延伸；level < 0 只向左（找调用者）；level > 0 只向右（找被调用者）
+  //   每个节点只会被"第一个发现它的链路"认领，parent 即链路上的前驱
   const visited = new Set<string>()
+  const queued = new Set<string>()
   const levelById = new Map<string, number>()
   const parentIdMap = new Map<string, string | null>()
   const childIdsMap = new Map<string, string[]>()
@@ -116,28 +133,45 @@ export function buildGraph(
     if (visited.has(id)) continue
     if (visited.size >= LIMITS.MAX_GRAPH_NODES) { truncated = true; break }
     visited.add(id)
+    queued.delete(id)
     levelById.set(id, level)
     parentIdMap.set(id, parentId)
     if (parentId) registerChild(parentId, id)
 
-    // 向下：被调用者（level + 1，右）
-    if (level < calleeDepth) {
-      const callees = calleesOf.get(id) ?? []
-      for (const ce of callees) {
-        addEdge(id, ce.calleeId, ce.sites)
-        if (!visited.has(ce.calleeId)) {
-          queue.push({ id: ce.calleeId, level: level + 1, parentId: id })
-        }
-      }
+    const enqueue = (childId: string, childLevel: number) => {
+      if (visited.has(childId) || queued.has(childId)) return
+      queued.add(childId)
+      queue.push({ id: childId, level: childLevel, parentId: id })
     }
 
-    // 向上：调用者（level - 1，左）
-    if (level > -callerDepth) {
-      const callers = callersOf.get(id) ?? []
-      for (const cr of callers) {
-        addEdge(cr.callerId, id, cr.sites)
-        if (!visited.has(cr.callerId)) {
-          queue.push({ id: cr.callerId, level: level - 1, parentId: id })
+    if (level === 0) {
+      // 锚点：双向延伸第一层
+      if (calleeDepth > 0) {
+        for (const ce of calleesOf.get(id) ?? []) {
+          addEdge(id, ce.calleeId, ce.sites)
+          enqueue(ce.calleeId, 1)
+        }
+      }
+      if (callerDepth > 0) {
+        for (const cr of callersOf.get(id) ?? []) {
+          addEdge(cr.callerId, id, cr.sites)
+          enqueue(cr.callerId, -1)
+        }
+      }
+    } else if (level > 0) {
+      // 被调用者方向：只继续向外找它的被调用者（链路向下游延伸）
+      if (level < calleeDepth) {
+        for (const ce of calleesOf.get(id) ?? []) {
+          addEdge(id, ce.calleeId, ce.sites)
+          enqueue(ce.calleeId, level + 1)
+        }
+      }
+    } else {
+      // 调用者方向：只继续向外找它的调用者（链路向上游延伸）
+      if (level > -callerDepth) {
+        for (const cr of callersOf.get(id) ?? []) {
+          addEdge(cr.callerId, id, cr.sites)
+          enqueue(cr.callerId, level - 1)
         }
       }
     }
@@ -150,44 +184,46 @@ export function buildGraph(
     for (const c of calls) if (c.status !== 'resolved' && !unresolved.includes(c)) unresolved.push(c)
   }
 
-  // ── 智能聚合 ──
+  // ── 函数分类 ──
   const nodeCategories = new Map<string, FuncCategory>()
   for (const id of visited) {
     const def = input.functionsById.get(id)
     if (def) nodeCategories.set(id, classifyFunction(def))
   }
 
+  // ── 智能聚合：同一父节点、同一方向、数量 >= 2 的工具函数折叠 ──
   const aggregatedIds = new Set<string>()
-  const aggregateMap = new Map<string, string[]>()
+  const aggregateMap = new Map<string, { memberIds: string[]; level: number }>()
 
-  const byLevel = new Map<number, string[]>()
-  for (const id of visited) {
-    const lvl = levelById.get(id) ?? 0
-    const arr = byLevel.get(lvl) ?? []
-    arr.push(id)
-    byLevel.set(lvl, arr)
-  }
-
-  // 聚合连续工具函数
-  for (const [level, ids] of byLevel) {
-    if (level === 0) continue
-    const utilRuns: string[][] = []
-    let currentRun: string[] = []
-    for (const id of ids) {
-      if (nodeCategories.get(id) === 'util' && id !== anchorId) {
-        currentRun.push(id)
-      } else {
-        if (currentRun.length >= 2) utilRuns.push(currentRun)
-        currentRun = []
-      }
+  for (const [parentId, childIds] of childIdsMap) {
+    // 按方向分组（锚点的子节点有两个方向；其他节点单向）
+    const leftUtils: string[] = []
+    const rightUtils: string[] = []
+    for (const cid of childIds) {
+      if (cid === anchorId) continue
+      if (nodeCategories.get(cid) !== 'util') continue
+      const lvl = levelById.get(cid) ?? 0
+      if (lvl < 0) leftUtils.push(cid)
+      else if (lvl > 0) rightUtils.push(cid)
     }
-    if (currentRun.length >= 2) utilRuns.push(currentRun)
-    for (const run of utilRuns) {
-      const aggId = `agg:${level}:${run[0]}`
-      aggregateMap.set(aggId, run)
-      for (const id of run) aggregatedIds.add(id)
+    if (leftUtils.length >= 2) {
+      const aggId = `agg:${parentId}:L`
+      aggregateMap.set(aggId, { memberIds: leftUtils, level: levelById.get(leftUtils[0]) ?? -1 })
+      for (const mid of leftUtils) aggregatedIds.add(mid)
+    }
+    if (rightUtils.length >= 2) {
+      const aggId = `agg:${parentId}:R`
+      aggregateMap.set(aggId, { memberIds: rightUtils, level: levelById.get(rightUtils[0]) ?? 1 })
+      for (const mid of rightUtils) aggregatedIds.add(mid)
     }
   }
+
+  // 成员 → 聚合节点 映射（用于父节点 childIds 重定向与边重定向）
+  const memberToAgg = new Map<string, string>()
+  for (const [aggId, { memberIds }] of aggregateMap) {
+    for (const mid of memberIds) memberToAgg.set(mid, aggId)
+  }
+  const resolveNodeId = (id: string): string => memberToAgg.get(id) ?? id
 
   // ── 构建节点 ──
   const nodes: GraphNode[] = []
@@ -198,9 +234,16 @@ export function buildGraph(
     if (!def) continue
     const level = levelById.get(id) ?? 0
     const category = nodeCategories.get(id) ?? 'core'
-    const childIds = childIdsMap.get(id) ?? []
-    // 过滤掉被聚合的子节点
-    const visibleChildIds = childIds.filter((cid) => !aggregatedIds.has(cid))
+    // childIds 重定向：聚合成员替换为聚合节点 id，并按相关性排序
+    const rawChildIds = childIdsMap.get(id) ?? []
+    const mapped = new Set<string>()
+    for (const cid of rawChildIds) mapped.add(resolveNodeId(cid))
+    const visibleChildIds = [...mapped].sort((a, b) => {
+      const na = input.functionsById.get(a), nb = input.functionsById.get(b)
+      const ra = na ? CATEGORY_RANK[nodeCategories.get(a) ?? 'core'] : 0
+      const rb = nb ? CATEGORY_RANK[nodeCategories.get(b) ?? 'core'] : 0
+      return ra - rb
+    })
     nodes.push({
       id, def, level,
       x: 0, y: 0,
@@ -214,11 +257,9 @@ export function buildGraph(
   }
 
   // 聚合节点
-  for (const [aggId, memberIds] of aggregateMap) {
+  for (const [aggId, { memberIds, level }] of aggregateMap) {
     const firstDef = input.functionsById.get(memberIds[0])
     if (!firstDef) continue
-    const parts = aggId.split(':')
-    const level = parseInt(parts[1]) || 0
     const parentOfFirst = parentIdMap.get(memberIds[0]) ?? null
     nodes.push({
       id: aggId,
@@ -237,26 +278,21 @@ export function buildGraph(
   }
 
   // ── 构建边（重定向到聚合节点）──
-  const memberToAgg = new Map<string, string>()
-  for (const [aggId, memberIds] of aggregateMap) {
-    for (const mid of memberIds) memberToAgg.set(mid, aggId)
-  }
-  const resolveNodeId = (id: string): string => memberToAgg.get(id) ?? id
-
   const edgesArr: GraphEdge[] = []
-  const seenEdges = new Set<string>()
+  const edgesByAggKey = new Map<string, GraphEdge>()
   for (const e of edgesByKey.values()) {
     if (!visited.has(e.from) || !visited.has(e.to)) continue
     const from = resolveNodeId(e.from)
     const to = resolveNodeId(e.to)
     if (from === to) continue
     const key = `${from}->${to}`
-    if (seenEdges.has(key)) {
-      const existing = edgesArr.find((x) => `${x.from}->${x.to}` === key)
-      if (existing) for (const s of e.sites) if (!existing.sites.includes(s)) existing.sites.push(s)
+    const existing = edgesByAggKey.get(key)
+    if (existing) {
+      for (const s of e.sites) if (!existing.sites.includes(s)) existing.sites.push(s)
     } else {
-      seenEdges.add(key)
-      edgesArr.push({ from, to, sites: [...e.sites], edgeType: e.edgeType })
+      const edge: GraphEdge = { from, to, sites: [...e.sites], edgeType: e.edgeType }
+      edgesByAggKey.set(key, edge)
+      edgesArr.push(edge)
     }
   }
 

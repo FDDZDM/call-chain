@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主界面</title>
+    <style id="theme-vars">
+/* CallChain 美化设计 — 深色开发者工具主题 */
+
+:root {
+  /* ── 基础背景层 ── */
+  --brand-background: #0d1117;
+  --brand-foreground: #e6edf3;
+
+  /* ── 卡片/面板层 ── */
+  --brand-card: #161b22;
+  --brand-card-foreground: #e6edf3;
+
+  /* ── 弹出层 ── */
+  --brand-popover: #1c2330;
+  --brand-popover-foreground: #e6edf3;
+
+  /* ── 主色 (Indigo) ── */
+  --brand-primary: #6366f1;
+  --brand-primary-foreground: #ffffff;
+
+  /* ── 次要文本/静默色 ── */
+  --brand-muted: #21262d;
+  --brand-muted-foreground: #8b949e;
+
+  /* ── 边框/输入/焦点环 ── */
+  --brand-border: #30363d;
+  --brand-input: #30363d;
+  --brand-ring: #6366f1;
+
+  /* ── 圆角 ── */
+  --brand-radius-sm: 4px;
+  --brand-radius-md: 8px;
+  --brand-radius-lg: 12px;
+}
+
+/* ── 字体 ── */
+:root {
+  --brand-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif;
+  --brand-font-mono: "SF Mono", "Cascadia Code", "JetBrains Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
+}
+
+/* ── 语义状态色 ── */
+:root {
+  --state-success: #3ee85a;
+  --state-warning: #f59e0b;
+  --state-error: #f85149;
+  --state-info: #6366f1;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--brand-background);
+    --color-foreground: var(--brand-foreground);
+    --color-card: var(--brand-card);
+    --color-card-foreground: var(--brand-card-foreground);
+    --color-popover: var(--brand-popover);
+    --color-popover-foreground: var(--brand-popover-foreground);
+    --color-primary: var(--brand-primary);
+    --color-primary-foreground: var(--brand-primary-foreground);
+    --color-muted: var(--brand-muted);
+    --color-muted-foreground: var(--brand-muted-foreground);
+    --color-border: var(--brand-border);
+    --color-input: var(--brand-input);
+    --color-ring: var(--brand-ring);
+    --radius-sm: var(--brand-radius-sm);
+    --radius-md: var(--brand-radius-md);
+    --radius-lg: var(--brand-radius-lg);
+  }
+  @layer base {
+    body { background: var(--brand-background); color: var(--brand-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--brand-background); }
+      .text-background { color: var(--brand-background); }
+      .border-background { border-color: var(--brand-background); }
+      .ring-background { --tw-ring-color: var(--brand-background); }
+      .bg-foreground { background-color: var(--brand-foreground); }
+      .text-foreground { color: var(--brand-foreground); }
+      .border-foreground { border-color: var(--brand-foreground); }
+      .ring-foreground { --tw-ring-color: var(--brand-foreground); }
+      .bg-card { background-color: var(--brand-card); }
+      .text-card { color: var(--brand-card); }
+      .border-card { border-color: var(--brand-card); }
+      .ring-card { --tw-ring-color: var(--brand-card); }
+      .bg-card-foreground { background-color: var(--brand-card-foreground); }
+      .text-card-foreground { color: var(--brand-card-foreground); }
+      .border-card-foreground { border-color: var(--brand-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--brand-card-foreground); }
+      .bg-popover { background-color: var(--brand-popover); }
+      .text-popover { color: var(--brand-popover); }
+      .border-popover { border-color: var(--brand-popover); }
+      .ring-popover { --tw-ring-color: var(--brand-popover); }
+      .bg-popover-foreground { background-color: var(--brand-popover-foreground); }
+      .text-popover-foreground { color: var(--brand-popover-foreground); }
+      .border-popover-foreground { border-color: var(--brand-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--brand-popover-foreground); }
+      .bg-primary { background-color: var(--brand-primary); }
+      .text-primary { color: var(--brand-primary); }
+      .border-primary { border-color: var(--brand-primary); }
+      .ring-primary { --tw-ring-color: var(--brand-primary); }
+      .bg-primary-foreground { background-color: var(--brand-primary-foreground); }
+      .text-primary-foreground { color: var(--brand-primary-foreground); }
+      .border-primary-foreground { border-color: var(--brand-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--brand-primary-foreground); }
+      .bg-muted { background-color: var(--brand-muted); }
+      .text-muted { color: var(--brand-muted); }
+      .border-muted { border-color: var(--brand-muted); }
+      .ring-muted { --tw-ring-color: var(--brand-muted); }
+      .bg-muted-foreground { background-color: var(--brand-muted-foreground); }
+      .text-muted-foreground { color: var(--brand-muted-foreground); }
+      .border-muted-foreground { border-color: var(--brand-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--brand-muted-foreground); }
+      .bg-border { background-color: var(--brand-border); }
+      .text-border { color: var(--brand-border); }
+      .border-border { border-color: var(--brand-border); }
+      .ring-border { --tw-ring-color: var(--brand-border); }
+      .bg-input { background-color: var(--brand-input); }
+      .text-input { color: var(--brand-input); }
+      .border-input { border-color: var(--brand-input); }
+      .ring-input { --tw-ring-color: var(--brand-input); }
+      .bg-ring { background-color: var(--brand-ring); }
+      .text-ring { color: var(--brand-ring); }
+      .border-ring { border-color: var(--brand-ring); }
+      .ring-ring { --tw-ring-color: var(--brand-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="font-sans antialiased">
+    <main data-viewport-mode="app-shell" data-scroll-region="primary" class="overflow-y-auto">
+    <style id="critical-layout">
+      html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+      body { font-family: var(--brand-font-sans); background: var(--brand-background); color: var(--brand-foreground); font-size: 13px; -webkit-font-smoothing: antialiased; }
+      * { box-sizing: border-box; }
+      .app-shell { display: flex; flex-direction: column; height: 100vh; overflow-x: hidden; overflow-y: auto; }
+
+      .topbar { height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px 0 80px; background: var(--brand-card); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--brand-border); -webkit-app-region: drag; }
+      .no-drag { -webkit-app-region: no-drag; }
+
+      .parse-progress { height: 28px; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: rgba(99, 102, 241, 0.06); border-bottom: 1px solid rgba(99, 102, 241, 0.15); }
+      .parse-progress .track { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(99, 102, 241, 0.12); }
+      .parse-progress .track .fill { height: 100%; width: 100%; background: var(--state-success); }
+
+      .main-area { flex: 1; display: flex; position: relative; overflow: hidden; min-height: 0; }
+
+      .sidebar { position: absolute; left: 0; top: 0; bottom: 0; width: 240px; z-index: 20; background: var(--brand-card); border-right: 1px solid var(--brand-border); box-shadow: 4px 0 24px rgba(0,0,0,0.3); display: flex; flex-direction: column; }
+      .sidebar-header { height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-bottom: 1px solid var(--brand-border); }
+      .sidebar-body { flex: 1; overflow-y: auto; padding: 4px 0; }
+      .tree-row { display: flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 12px; color: var(--brand-foreground); cursor: pointer; border-radius: var(--brand-radius-sm); }
+      .tree-row:hover { background: rgba(99, 102, 241, 0.08); }
+      .tree-row.sel { background: rgba(99, 102, 241, 0.12); border-left: 2px solid var(--brand-primary); }
+
+      .code-pane { flex: 1; display: flex; flex-direction: column; min-width: 0; margin-left: 240px; }
+      .tab-bar { height: 36px; flex-shrink: 0; display: flex; background: var(--brand-card); border-bottom: 1px solid var(--brand-border); overflow-x: auto; }
+      .tab { display: flex; align-items: center; gap: 6px; padding: 0 12px; height: 100%; font-size: 12px; cursor: pointer; color: var(--brand-muted-foreground); white-space: nowrap; }
+      .tab:hover { background: rgba(255,255,255,0.04); }
+      .tab.active { background: var(--brand-background); color: var(--brand-foreground); font-weight: 500; border-bottom: 2px solid var(--brand-primary); }
+      .tab .tab-name { font-family: var(--brand-font-mono); }
+
+      .code-editor { flex: 1; position: relative; background: var(--brand-background); overflow: auto; }
+      .cmd-hint { background: var(--brand-primary); color: var(--brand-primary-foreground); font-size: 11px; padding: 2px 12px; text-align: center; }
+      .code-line { display: flex; align-items: baseline; height: 20px; }
+      .code-line .ln { width: 48px; flex-shrink: 0; text-align: right; padding-right: 12px; color: rgba(139,148,158,0.4); font-family: var(--brand-font-mono); font-size: 13px; line-height: 20px; user-select: none; }
+      .code-line code { font-family: var(--brand-font-mono); font-size: 13px; line-height: 20px; padding-left: 8px; white-space: pre; color: #e6edf3; }
+      .code-line-sel { background: rgba(99, 102, 241, 0.08); border-left: 2px solid var(--brand-primary); }
+      .code-kw { color: #ff7b72; }
+      .code-ty { color: #79c0ff; }
+      .code-str { color: #a5d6ff; }
+      .code-cmt { color: #8b949e; font-style: italic; }
+      .code-fn { color: #d2a8ff; }
+      .code-num { color: #79c0ff; }
+
+      .right-panel { width: 420px; flex-shrink: 0; display: flex; flex-direction: column; border-left: 1px solid var(--brand-border); min-height: 0; }
+      .graph-pane { flex: 1.6; display: flex; flex-direction: column; min-height: 0; position: relative; overflow: hidden; background: linear-gradient(180deg, var(--brand-card) 0%, var(--brand-background) 100%); }
+      .breadcrumb-bar { height: 30px; flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding: 0 12px; background: var(--brand-card); border-bottom: 1px solid var(--brand-border); }
+      .graph-toolbar { height: 32px; flex-shrink: 0; display: flex; align-items: center; gap: 4px; padding: 0 8px; background: var(--brand-muted); border-bottom: 1px solid var(--brand-border); }
+      .graph-svg-area { flex: 1; position: relative; min-height: 0; background-image: radial-gradient(rgba(48,54,61,0.3) 1px, transparent 1px); background-size: 20px 20px; }
+      .minimap { position: absolute; right: 8px; bottom: 8px; width: 120px; height: 70px; background: rgba(22, 27, 34, 0.9); border: 1px solid var(--brand-border); border-radius: var(--brand-radius-sm); box-shadow: 0 4px 12px rgba(0,0,0,0.4); overflow: hidden; }
+
+      .inspector { flex: 1; display: flex; flex-direction: column; background: var(--brand-card); overflow: auto; padding: 12px; min-height: 0; }
+
+      .icon-btn { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--brand-radius-sm); cursor: pointer; color: var(--brand-muted-foreground); background: transparent; border: none; padding: 0; }
+      .icon-btn:hover { background: rgba(255,255,255,0.06); color: var(--brand-foreground); }
+      .graph-tool-btn { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--brand-border); background: var(--brand-card); border-radius: var(--brand-radius-sm); padding: 3px 8px; font-size: 11px; color: var(--brand-muted-foreground); cursor: pointer; }
+      .graph-tool-btn:hover { color: var(--brand-foreground); border-color: var(--brand-muted-foreground); }
+      svg.lucide { display: inline-block; vertical-align: middle; flex-shrink: 0; }
+
+      .relation-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid rgba(48,54,61,0.5); }
+      .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+      .section-label { font-size: 11px; font-weight: 600; color: var(--brand-muted-foreground); text-transform: uppercase; letter-spacing: 0.5px; }
+
+      .svg-name { font-size: 11px; font-weight: 600; fill: var(--brand-foreground); font-family: var(--brand-font-sans); }
+      .svg-file { font-size: 9px; fill: var(--brand-muted-foreground); font-family: var(--brand-font-mono); }
+      .svg-col-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; font-family: var(--brand-font-sans); }
+      .svg-badge-text { font-size: 8px; font-family: var(--brand-font-sans); }
+      .svg-node-card { fill: var(--brand-card); }
+    </style>
+
+    <div class="app-shell" data-viewport-mode="app-shell" data-scroll-region="primary">
+      <!-- 1. TopBar -->
+      <div class="topbar">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="icon-btn no-drag" style="width:28px; height:28px;" aria-label="切换侧边栏"><i data-lucide="panel-left" width="16" height="16"></i></button>
+          <span style="display:inline-flex; align-items:center; gap:6px;">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs><linearGradient id="chainGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#818cf8"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs>
+              <path d="M6 10.5a2.5 2.5 0 0 1 0-3.5l1.2-1.2a2.5 2.5 0 0 1 3.5 0" stroke="url(#chainGrad)" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+              <path d="M10 5.5a2.5 2.5 0 0 1 0 3.5l-1.2 1.2a2.5 2.5 0 0 1-3.5 0" stroke="url(#chainGrad)" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+            </svg>
+            <span style="font-size:13px; font-weight:600; color:var(--brand-foreground);">CallChain</span>
+          </span>
+          <span style="font-family:var(--brand-font-mono); font-size:11px; color:var(--brand-muted-foreground); max-width:400px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-left:8px;">~/Projects/CallChain/CallChainApp</span>
+        </div>
+        <button class="no-drag" style="display:inline-flex; align-items:center; gap:6px; background:var(--brand-primary); color:var(--brand-primary-foreground); padding:6px 14px; border-radius:var(--brand-radius-md); font-size:12px; border:none; cursor:pointer; font-weight:500;">
+          <i data-lucide="folder-open" width="14" height="14"></i>打开项目
+        </button>
+      </div>
+
+      <!-- 2. Parse progress -->
+      <div class="parse-progress">
+        <span style="font-size:11px; color:#8b9cf2;">解析完成 · 已提取 128 个函数符号</span>
+        <i data-lucide="check" width="14" height="14" style="color:var(--state-success);"></i>
+        <div class="track"><div class="fill"></div></div>
+      </div>
+
+      <!-- 3. Main area -->
+      <div class="main-area">
+        <!-- 3a. Sidebar / Project tree -->
+        <aside class="sidebar">
+          <div class="sidebar-header">
+            <span style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--brand-muted-foreground); font-weight:600;">项目结构</span>
+            <button class="icon-btn" style="width:20px; height:20px;" aria-label="关闭侧边栏"><i data-lucide="x" width="14" height="14"></i></button>
+          </div>
+          <div class="sidebar-body">
+            <div class="tree-row" style="padding-left:14px;">
+              <i data-lucide="chevron-down" width="10" height="10" style="color:var(--brand-muted-foreground);"></i>
+              <i data-lucide="folder-open" width="14" height="14" style="color:#58a6ff;"></i>
+              <span>Sources</span>
+            </div>
+            <div class="tree-row" style="padding-left:28px;">
+              <i data-lucide="chevron-down" width="10" height="10" style="color:var(--brand-muted-foreground);"></i>
+              <i data-lucide="folder-open" width="14" height="14" style="color:#58a6ff;"></i>
+              <span>CallChain</span>
+            </div>
+            <div class="tree-row sel" style="padding-left:52px;">
+              <span style="width:10px; display:inline-block; flex-shrink:0;"></span>
+              <i data-lucide="file-code" width="14" height="14" style="color:#fa7344;"></i>
+              <span>ContentView.swift</span>
+            </div>
+            <div class="tree-row" style="padding-left:52px;">
+              <span style="width:10px; display:inline-block; flex-shrink:0;"></span>
+              <i data-lucide="file-code" width="14" height="14" style="color:#fa7344;"></i>
+              <span>CallGraph.swift</span>
+            </div>
+            <div class="tree-row" style="padding-left:52px;">
+              <span style="width:10px; display:inline-block; flex-shrink:0;"></span>
+              <i data-lucide="file-code" width="14" height="14" style="color:#fa7344;"></i>
+              <span>GraphRenderer.swift</span>
+            </div>
+            <div class="tree-row" style="padding-left:52px;">
+              <span style="width:10px; display:inline-block; flex-shrink:0;"></span>
+              <i data-lucide="file-code" width="14" height="14" style="color:#fa7344;"></i>
+              <span>AnalyzerCore.swift</span>
+            </div>
+            <div class="tree-row" style="padding-left:14px;">
+              <i data-lucide="chevron-down" width="10" height="10" style="color:var(--brand-muted-foreground);"></i>
+              <i data-lucide="folder-open" width="14" height="14" style="color:#58a6ff;"></i>
+              <span>electron</span>
+            </div>
+            <div class="tree-row" style="padding-left:28px;">
+              <i data-lucide="chevron-down" width="10" height="10" style="color:var(--brand-muted-foreground);"></i>
+              <i data-lucide="folder-open" width="14" height="14" style="color:#58a6ff;"></i>
+              <span>src</span>
+            </div>
+            <div class="tree-row" style="padding-left:52px;">
+              <span style="width:10px; display:inline-block; flex-shrink:0;"></span>
+              <i data-lucide="file-code" width="14" height="14" style="color:#3178c6;"></i>
+              <span>App.tsx</span>
+            </div>
+            <div class="tree-row" style="padding-left:52px;">
+              <span style="width:10px; display:inline-block; flex-shrink:0;"></span>
+              <i data-lucide="file-code" width="14" height="14" style="color:var(--brand-muted-foreground);"></i>
+              <span>index.css</span>
+            </div>
+            <div class="tree-row" style="padding-left:28px;">
+              <i data-lucide="chevron-down" width="10" height="10" style="color:var(--brand-muted-foreground);"></i>
+              <i data-lucide="folder-open" width="14" height="14" style="color:#58a6ff;"></i>
+              <span>components</span>
+            </div>
+            <div class="tree-row" style="padding-left:52px;">
+              <span style="width:10px; display:inline-block; flex-shrink:0;"></span>
+              <i data-lucide="file-code" width="14" height="14" style="color:#3178c6;"></i>
+              <span>CallGraphView.tsx</span>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 3b. Code pane -->
+        <section class="code-pane">
+          <!-- Tab bar -->
+          <div class="tab-bar">
+            <div class="tab active">
+              <i data-lucide="file-code" width="14" height="14" style="color:#fa7344;"></i>
+              <span class="tab-name">ContentView.swift</span>
+              <button class="icon-btn" style="width:16px; height:16px;" aria-label="关闭标签页"><i data-lucide="x" width="12" height="12"></i></button>
+            </div>
+            <div class="tab">
+              <i data-lucide="file-code" width="14" height="14" style="color:#fa7344;"></i>
+              <span class="tab-name">CallGraph.swift</span>
+              <button class="icon-btn" style="width:16px; height:16px;" aria-label="关闭标签页"><i data-lucide="x" width="12" height="12"></i></button>
+            </div>
+          </div>
+          <!-- Code editor -->
+          <div class="code-editor">
+            <div class="cmd-hint">⌘+点击函数名查看调用链</div>
+            <div class="code-line"><span class="ln">1</span><code><span class="code-kw">import</span> <span class="code-ty">SwiftUI</span></code></div>
+            <div class="code-line"><span class="ln">2</span><code></code></div>
+            <div class="code-line"><span class="ln">3</span><code><span class="code-kw">struct</span> <span class="code-ty">ContentView</span>: <span class="code-ty">View</span> {</code></div>
+            <div class="code-line"><span class="ln">4</span><code>    <span class="code-kw">@StateObject</span> <span class="code-kw">private</span> <span class="code-kw">var</span> analyzer = <span class="code-ty">CallChainAnalyzer</span>()</code></div>
+            <div class="code-line"><span class="ln">5</span><code>    <span class="code-kw">@State</span> <span class="code-kw">private</span> <span class="code-kw">var</span> selectedFunction: <span class="code-ty">Symbol</span>?</code></div>
+            <div class="code-line"><span class="ln">6</span><code></code></div>
+            <div class="code-line"><span class="ln">7</span><code>    <span class="code-kw">var</span> <span class="code-fn">body</span>: <span class="code-kw">some</span> <span class="code-ty">View</span> {</code></div>
+            <div class="code-line"><span class="ln">8</span><code>        <span class="code-ty">HSplitView</span> {</code></div>
+            <div class="code-line"><span class="ln">9</span><code>            <span class="code-fn">CodeEditorView</span>(text: $sourceCode)</code></div>
+            <div class="code-line"><span class="ln">10</span><code>                .<span class="code-fn">frame</span>(minWidth: <span class="code-num">400</span>, minHeight: <span class="code-num">300</span>)</code></div>
+            <div class="code-line"><span class="ln">11</span><code></code></div>
+            <div class="code-line"><span class="ln">12</span><code>            <span class="code-fn">CallGraphView</span>(graph: analyzer.graph)</code></div>
+            <div class="code-line"><span class="ln">13</span><code>                .<span class="code-fn">frame</span>(minWidth: <span class="code-num">360</span>)</code></div>
+            <div class="code-line"><span class="ln">14</span><code>        }</code></div>
+            <div class="code-line"><span class="ln">15</span><code>        .<span class="code-fn">onAppear</span> {</code></div>
+            <div class="code-line"><span class="ln">16</span><code>            analyzer.<span class="code-fn">parse</span>()</code></div>
+            <div class="code-line"><span class="ln">17</span><code>        }</code></div>
+            <div class="code-line"><span class="ln">18</span><code>    }</code></div>
+            <div class="code-line"><span class="ln">19</span><code>    <span class="code-cmt">// 构建调用图</span></code></div>
+            <div class="code-line"><span class="ln">20</span><code>    <span class="code-kw">private</span> <span class="code-kw">func</span> <span class="code-fn">buildGraph</span>() -&gt; <span class="code-ty">CallGraph</span> {</code></div>
+            <div class="code-line code-line-sel"><span class="ln">21</span><code>        <span class="code-kw">let</span> symbols = <span class="code-ty">SymbolExtractor</span>.<span class="code-fn">extract</span>(from: sourceCode)</code></div>
+            <div class="code-line"><span class="ln">22</span><code>        <span class="code-kw">return</span> <span class="code-ty">GraphBuilder</span>(symbols: symbols).<span class="code-fn">build</span>()</code></div>
+            <div class="code-line"><span class="ln">23</span><code>    }</code></div>
+            <div class="code-line"><span class="ln">24</span><code>}</code></div>
+          </div>
+        </section>
+
+        <!-- 3c. Right panel -->
+        <aside class="right-panel">
+          <!-- Call graph -->
+          <div class="graph-pane">
+            <!-- breadcrumb -->
+            <div class="breadcrumb-bar">
+              <i data-lucide="navigation" width="12" height="12" style="color:var(--brand-primary);"></i>
+              <span style="font-family:var(--brand-font-mono); font-size:11px; color:var(--brand-foreground);">ContentView <span style="color:var(--brand-muted-foreground);">▶</span> buildGraph <span style="color:var(--brand-muted-foreground);">▶</span> resolveSymbol</span>
+            </div>
+            <!-- toolbar -->
+            <div class="graph-toolbar">
+              <button class="graph-tool-btn"><i data-lucide="maximize" width="12" height="12"></i>适配</button>
+              <button class="graph-tool-btn"><i data-lucide="maximize-2" width="12" height="12"></i>全屏</button>
+              <span style="margin-left:auto; font-size:10px; color:var(--brand-muted-foreground);">8 / 12 节点 · 10 调用</span>
+            </div>
+            <div class="graph-svg-area" id="cc-graph-area">
+              <svg viewBox="0 0 600 340" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" style="display:block; position:absolute; top:0; left:0;">
+                <defs>
+                  <marker id="arrow-default" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#30363d"/>
+                  </marker>
+                  <marker id="arrow-primary" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                    <path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1"/>
+                  </marker>
+                </defs>
+
+                <!-- column labels -->
+                <text x="75" y="22" text-anchor="middle" class="svg-col-label" fill="#f59e0b">调用者 1</text>
+                <text x="225" y="22" text-anchor="middle" class="svg-col-label" fill="#6366f1" style="font-size:11px;">当前函数</text>
+                <text x="375" y="22" text-anchor="middle" class="svg-col-label" fill="#3ee85a">被调用者 1</text>
+                <text x="525" y="22" text-anchor="middle" class="svg-col-label" fill="#3ee85a">被调用者 2</text>
+
+                <!-- edges -->
+                <path d="M 140 112 C 190 112, 110 147, 160 147" stroke="#6366f1" stroke-width="2.5" fill="none" marker-end="url(#arrow-primary)"/>
+                <path d="M 140 182 C 190 182, 110 147, 160 147" stroke="#30363d" stroke-width="1.5" fill="none" marker-end="url(#arrow-default)"/>
+                <path d="M 290 147 C 340 147, 260 102, 310 102" stroke="#6366f1" stroke-width="2.5" fill="none" marker-end="url(#arrow-primary)"/>
+                <path d="M 290 147 C 340 147, 260 192, 310 192" stroke="#30363d" stroke-width="1.5" fill="none" marker-end="url(#arrow-default)"/>
+                <path d="M 440 102 C 490 102, 410 147, 460 147" stroke="#6366f1" stroke-width="2.5" fill="none" marker-end="url(#arrow-primary)"/>
+
+                <!-- Caller1: viewDidLoad -->
+                <g>
+                  <rect x="10" y="90" width="130" height="44" rx="6" style="fill: var(--brand-card); stroke: var(--state-warning); stroke-width: 1.5px;"/>
+                  <rect x="10" y="90" width="3" height="44" rx="1.5" fill="#a371f7"/>
+                  <polygon points="0,0 5,3 0,6" style="fill: var(--brand-primary);" transform="translate(22,104)"/>
+                  <text x="32" y="109" class="svg-name">viewDidLoad</text>
+                  <text x="32" y="122" class="svg-file">ContentView.swift:24</text>
+                  <rect x="104" y="95" width="32" height="12" rx="3" style="fill: rgba(163,113,247,0.18);"/>
+                  <text x="120" y="104" text-anchor="middle" class="svg-badge-text" fill="#a371f7">入口</text>
+                </g>
+
+                <!-- Caller2: onAppear -->
+                <g>
+                  <rect x="10" y="160" width="130" height="44" rx="6" style="fill: var(--brand-card); stroke: var(--state-warning); stroke-width: 1.5px;"/>
+                  <rect x="10" y="160" width="3" height="44" rx="1.5" fill="#6366f1"/>
+                  <polygon points="0,0 5,3 0,6" style="fill: var(--brand-primary);" transform="translate(22,174)"/>
+                  <text x="32" y="179" class="svg-name">onAppear</text>
+                  <text x="32" y="192" class="svg-file">ContentView.swift:38</text>
+                  <rect x="104" y="165" width="32" height="12" rx="3" style="fill: rgba(99,102,241,0.18);"/>
+                  <text x="120" y="174" text-anchor="middle" class="svg-badge-text" fill="#6366f1">核心</text>
+                </g>
+
+                <!-- Anchor: buildGraph (highlighted) -->
+                <g style="filter: drop-shadow(0 0 6px rgba(99,102,241,0.3));">
+                  <rect x="160" y="125" width="130" height="44" rx="6" style="fill: rgba(99,102,241,0.08); stroke: var(--brand-primary); stroke-width: 2px;"/>
+                  <rect x="160" y="125" width="3" height="44" rx="1.5" style="fill: var(--brand-primary);"/>
+                  <polygon points="0,0 5,0 2.5,5" style="fill: var(--brand-primary);" transform="translate(172,139)"/>
+                  <text x="182" y="144" class="svg-name">buildGraph</text>
+                  <text x="182" y="157" class="svg-file">GraphBuilder.swift:42</text>
+                  <rect x="254" y="130" width="32" height="12" rx="3" style="fill: rgba(99,102,241,0.18);"/>
+                  <text x="270" y="139" text-anchor="middle" class="svg-badge-text" fill="#6366f1">核心</text>
+                </g>
+
+                <!-- Callee1a: extractSymbols -->
+                <g>
+                  <rect x="310" y="80" width="130" height="44" rx="6" style="fill: var(--brand-card); stroke: var(--state-success); stroke-width: 1.5px;"/>
+                  <rect x="310" y="80" width="3" height="44" rx="1.5" fill="#3ee85a"/>
+                  <polygon points="0,0 5,3 0,6" style="fill: var(--brand-primary);" transform="translate(322,94)"/>
+                  <text x="332" y="99" class="svg-name">extractSymbols</text>
+                  <text x="332" y="112" class="svg-file">SymbolExtractor.swift:18</text>
+                  <rect x="404" y="85" width="32" height="12" rx="3" style="fill: rgba(62,232,90,0.18);"/>
+                  <text x="420" y="94" text-anchor="middle" class="svg-badge-text" fill="#3ee85a">工具</text>
+                </g>
+
+                <!-- Callee1b: resolveEdges -->
+                <g>
+                  <rect x="310" y="170" width="130" height="44" rx="6" style="fill: var(--brand-card); stroke: var(--state-success); stroke-width: 1.5px;"/>
+                  <rect x="310" y="170" width="3" height="44" rx="1.5" fill="#6366f1"/>
+                  <polygon points="0,0 5,3 0,6" style="fill: var(--brand-primary);" transform="translate(322,184)"/>
+                  <text x="332" y="189" class="svg-name">resolveEdges</text>
+                  <text x="332" y="202" class="svg-file">GraphBuilder.swift:78</text>
+                  <rect x="404" y="175" width="32" height="12" rx="3" style="fill: rgba(99,102,241,0.18);"/>
+                  <text x="420" y="184" text-anchor="middle" class="svg-badge-text" fill="#6366f1">核心</text>
+                </g>
+
+                <!-- Callee2: readFile -->
+                <g>
+                  <rect x="460" y="125" width="130" height="44" rx="6" style="fill: var(--brand-card); stroke: var(--state-success); stroke-width: 1.5px;"/>
+                  <rect x="460" y="125" width="3" height="44" rx="1.5" fill="#f59e0b"/>
+                  <polygon points="0,0 5,3 0,6" style="fill: var(--brand-primary);" transform="translate(472,139)"/>
+                  <text x="482" y="144" class="svg-name">readFile</text>
+                  <text x="482" y="157" class="svg-file">FileIO.swift:12</text>
+                  <rect x="554" y="130" width="32" height="12" rx="3" style="fill: rgba(245,158,11,0.18);"/>
+                  <text x="570" y="139" text-anchor="middle" class="svg-badge-text" fill="#f59e0b">IO</text>
+                </g>
+              </svg>
+
+              <!-- minimap -->
+              <div class="minimap" aria-hidden="true">
+                <svg viewBox="0 0 120 70" width="120" height="70" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="120" height="70" fill="rgba(13,17,23,0.4)"/>
+                  <circle cx="15" cy="23" r="2" fill="#f59e0b"/>
+                  <circle cx="15" cy="37" r="2" fill="#f59e0b"/>
+                  <circle cx="45" cy="30" r="2.5" fill="#6366f1"/>
+                  <circle cx="75" cy="21" r="2" fill="#3ee85a"/>
+                  <circle cx="75" cy="40" r="2" fill="#3ee85a"/>
+                  <circle cx="105" cy="30" r="2" fill="#3ee85a"/>
+                  <rect x="28" y="14" width="56" height="32" rx="2" fill="none" stroke="#6366f1" stroke-width="1"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+          <!-- /Call graph -->
+
+          <!-- Inspector -->
+          <div class="inspector">
+            <div>
+              <div style="font-family:var(--brand-font-mono); font-size:15px; font-weight:600; color:var(--brand-foreground);">buildGraph</div>
+              <div style="font-size:12px; color:var(--brand-primary); margin-top:2px;">GraphBuilder</div>
+              <div style="font-family:var(--brand-font-mono); font-size:11px; color:var(--brand-muted-foreground); margin-top:2px;">analyzer/graphBuilder.ts:42</div>
+            </div>
+            <div style="height:1px; background:var(--brand-border); margin:10px 0;"></div>
+            <div class="section-label">调用了</div>
+            <div style="margin-top:2px;">
+              <div class="relation-row">
+                <span class="dot" style="background:#3ee85a;"></span>
+                <span style="font-family:var(--brand-font-mono); font-size:12px; color:var(--brand-foreground);">extractSymbols</span>
+                <span style="font-size:10px; color:var(--brand-muted-foreground); margin-left:auto; font-family:var(--brand-font-mono);">SymbolExtractor.swift:18</span>
+              </div>
+              <div class="relation-row">
+                <span class="dot" style="background:#6366f1;"></span>
+                <span style="font-family:var(--brand-font-mono); font-size:12px; color:var(--brand-foreground);">resolveEdges</span>
+                <span style="font-size:10px; color:var(--brand-muted-foreground); margin-left:auto; font-family:var(--brand-font-mono);">GraphBuilder.swift:78</span>
+              </div>
+              <div class="relation-row">
+                <span class="dot" style="background:#f59e0b;"></span>
+                <span style="font-family:var(--brand-font-mono); font-size:12px; color:var(--brand-foreground);">readFile</span>
+                <span style="font-size:10px; color:var(--brand-muted-foreground); margin-left:auto; font-family:var(--brand-font-mono);">FileIO.swift:12</span>
+              </div>
+            </div>
+            <div class="section-label" style="margin-top:12px;">被调用</div>
+            <div style="margin-top:2px;">
+              <div class="relation-row">
+                <span class="dot" style="background:var(--state-warning);"></span>
+                <span style="font-family:var(--brand-font-mono); font-size:12px; color:var(--brand-foreground);">viewDidLoad</span>
+                <span style="font-size:10px; color:var(--brand-muted-foreground); margin-left:auto; font-family:var(--brand-font-mono);">ContentView.swift:24</span>
+              </div>
+              <div class="relation-row">
+                <span class="dot" style="background:var(--state-warning);"></span>
+                <span style="font-family:var(--brand-font-mono); font-size:12px; color:var(--brand-foreground);">onAppear</span>
+                <span style="font-size:10px; color:var(--brand-muted-foreground); margin-left:auto; font-family:var(--brand-font-mono);">ContentView.swift:38</span>
+              </div>
+            </div>
+          </div>
+          <!-- /Inspector -->
+        </aside>
+      </div>
+      <!-- /Main area -->
+    </div>
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

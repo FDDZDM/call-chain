@@ -1,0 +1,562 @@
+{
+  "skillProvenance": {
+    "name": "solo-design",
+    "version": "2026.07.06.8",
+    "version_source": "skill-release-manifest.json",
+    "read_status": "ok"
+  },
+  "project": {
+    "resolvedLane": "free_exploration",
+    "selectedIntentWorkflowRead": true,
+    "intentProfile": {
+      "caseFamily": "free_exploration",
+      "routingReason": "Open-ended desktop app UI beautification, no existing .design project, no Design Library, no restore target"
+    },
+    "deviceType": "desktop",
+    "operatingMode": "free-explore",
+    "contextRequirementsLoaded": [
+      {
+        "path": "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/page-rendering-quality-gate.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/design-artifact-validation.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "delivery-quality/delivery-evidence-contract.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      },
+      {
+        "path": "visual-experience/visual-experience-guidelines.md",
+        "readStatus": "loaded",
+        "bodyRead": true
+      }
+    ],
+    "contextReadScope": {
+      "mainAgent": {
+        "forbiddenReads": [
+          "other intent-workflows/**",
+          "Sub-Agent implementation files before dispatch"
+        ]
+      },
+      "pageSubAgent": {
+        "allowedReads": [
+          "current lane page runtime guide",
+          "current lane dispatch contract excerpt",
+          "current Page Packet",
+          "supplementaryReads[] only"
+        ],
+        "forbiddenReads": [
+          "SKILL.md full re-read",
+          "other intent-workflows/**",
+          "full runtime-orchestration-summary.json unless explicitly sliced"
+        ]
+      },
+      "readScopeLedgerWriter": "shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs"
+    },
+    "validationRunDiscipline": {
+      "maxFullValidationRuns": 2,
+      "softWarningsTriggerRepair": false,
+      "blockingRepairMode": "targeted-once",
+      "forbiddenRepairTriggers": [
+        "soft-warning-only",
+        "provenance-warning-only",
+        "style-warning-only"
+      ]
+    },
+    "lowValueCallWatchdog": {
+      "applies": true,
+      "noProgressSignals": [
+        "no_tool_call",
+        "no_artifact_diff",
+        "no_structured_decision"
+      ],
+      "noProgressNextAction": "enter_readiness_or_blocked_summary"
+    },
+    "sharedProjectShellContract": {
+      "type": "desktop-app-shell",
+      "frame": {
+        "viewportMode": "app-shell",
+        "rootLayout": "flex-column",
+        "chromeHeight": 44,
+        "contentSplit": "sidebar-left + main-right"
+      },
+      "colorSystem": "single-primary-indigo",
+      "typographyScale": "sans-body + mono-code",
+      "radiusModel": "sm-4 md-8 lg-12",
+      "depthModel": "layered-surfaces-with-subtle-borders",
+      "ctaStyle": "primary-button-rounded"
+    },
+    "cssPreflightEvidence": {
+      "applies": true,
+      "status": "passed",
+      "command": "node /Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs /Users/yezeming/Projects/CallChain/callchain-redesign/colors_and_type.css /Users/yezeming/Projects/CallChain/callchain-redesign/.preflight/preflight.html --title=Preflight --lang=zh-CN --prefix=brand",
+      "brandPrefix": "brand",
+      "prefixMode": "standard",
+      "checks": {
+        "themeVars": "present",
+        "semanticTokenFallback": "present",
+        "themeInline": "present",
+        "tailwindCdn": "present",
+        "htmlClass": "present",
+        "semanticMappings": "resolved"
+      },
+      "retryCount": 0,
+      "blockingReason": null
+    },
+    "dispatchPreflightManifest": [
+      {
+        "recorded_at": "2026-08-24T03:23:35.182Z",
+        "generatedBy": "build-page-dispatch-manifest.mjs",
+        "packetType": "FreePagePacket",
+        "laneContract": {
+          "resolvedLane": "free_exploration",
+          "packetType": "FreePagePacket",
+          "pageRuntimeGuide": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+          "dispatchContract": "intent-workflows/intent-page-free-exploration/dispatch-contract.md"
+        },
+        "taskLinePresent": true,
+        "outputPathPresent": true,
+        "sharedTemplate": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "nodeId": "page-main-active",
+        "htmlSrc": "pages/main-active.html",
+        "supplementaryReads": [],
+        "allowedWritePaths": [
+          "pages/main-active.html",
+          "assets/"
+        ],
+        "forbiddenWriteRoots": [
+          "*.design",
+          "runtime-orchestration-summary.json",
+          "validation-report.json",
+          "finish-readiness-report.json",
+          "restore-contract-report.json",
+          "page-generation-summary.json"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false,
+          "allowedWritePaths": [
+            "pages/main-active.html",
+            "assets/"
+          ]
+        },
+        "skillRuntime": {
+          "skillDir": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design",
+          "deterministicToolDir": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling",
+          "toolPaths": {
+            "applyHtmlHeadContract": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+            "recordDispatchCompletion": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+            "buildPageDispatchManifest": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+            "validateDesignWorkspace": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+            "validateFinishReadiness": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+            "validateRestoreContract": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+          },
+          "requiredForPageSubAgent": [
+            "applyHtmlHeadContract",
+            "recordDispatchCompletion"
+          ],
+          "pathInjection": "absolute",
+          "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+          "commandTemplates": {
+            "recordDispatchCompletion": "node '/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yezeming/Projects/CallChain/callchain-redesign' --node-id='page-main-active' --html-src='pages/main-active.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+          }
+        },
+        "cssFilePath": "/Users/yezeming/Projects/CallChain/callchain-redesign/colors_and_type.css",
+        "htmlFilePath": "/Users/yezeming/Projects/CallChain/callchain-redesign/pages/main-active.html",
+        "brandPrefix": "brand",
+        "aestheticsMode": "free-explore",
+        "toolDisciplineBlockPresent": true,
+        "fillHtmlHeadCommand": "node '/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs' '/Users/yezeming/Projects/CallChain/callchain-redesign/colors_and_type.css' '/Users/yezeming/Projects/CallChain/callchain-redesign/pages/main-active.html' --title='主界面' --lang='zh-CN' --prefix='brand'",
+        "headFillMode": "skeleton-first",
+        "viewportMode": "app-shell",
+        "completionSchemaExpected": "compact",
+        "restoreFields": null,
+        "restoreContractStatus": null,
+        "restoreCompactPacket": null,
+        "deterministicCommands": null,
+        "sourceAuthorityLock": null,
+        "preDispatchFileHashes": {
+          "callchain-redesign.design": "51b9e5937e61cc01977b4d7ed2df6d2243d9017803a212acf2851c4686997ea2"
+        },
+        "contextPreflight": {
+          "workflowPath": "intent-workflows/intent-page-free-exploration/INTENT_WORKFLOW.md",
+          "requiredContextFiles": [
+            "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+            "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+            "delivery-quality/page-rendering-quality-gate.md",
+            "delivery-quality/design-artifact-validation.md",
+            "delivery-quality/delivery-evidence-contract.md",
+            "visual-experience/visual-experience-guidelines.md"
+          ],
+          "optionalContextFiles": [],
+          "passed": true
+        },
+        "pageSliceOnly": true,
+        "requiredFieldsPresent": true,
+        "missingFields": [],
+        "fillHtmlHeadCommandValid": true,
+        "mobileNavigation": {
+          "required": false,
+          "appliesToThisPage": false,
+          "canonicalHtmlIncluded": false,
+          "missingFields": []
+        },
+        "persistedToSummary": true,
+        "taskQueryAudited": false,
+        "proofSource": "summary-only",
+        "largeWorkflowFilesInTaskQuery": null
+      },
+      {
+        "recorded_at": "2026-08-24T03:23:35.182Z",
+        "generatedBy": "build-page-dispatch-manifest.mjs",
+        "packetType": "FreePagePacket",
+        "laneContract": {
+          "resolvedLane": "free_exploration",
+          "packetType": "FreePagePacket",
+          "pageRuntimeGuide": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+          "dispatchContract": "intent-workflows/intent-page-free-exploration/dispatch-contract.md"
+        },
+        "taskLinePresent": true,
+        "outputPathPresent": true,
+        "sharedTemplate": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "nodeId": "page-empty-state",
+        "htmlSrc": "pages/empty-state.html",
+        "supplementaryReads": [],
+        "allowedWritePaths": [
+          "pages/empty-state.html",
+          "assets/"
+        ],
+        "forbiddenWriteRoots": [
+          "*.design",
+          "runtime-orchestration-summary.json",
+          "validation-report.json",
+          "finish-readiness-report.json",
+          "restore-contract-report.json",
+          "page-generation-summary.json"
+        ],
+        "toolPolicy": {
+          "todoWriteAllowed": false,
+          "validationScriptsAllowed": false,
+          "previewAllowed": false,
+          "helperScriptsAllowed": false,
+          "designFileWriteAllowed": false,
+          "allowedWritePaths": [
+            "pages/empty-state.html",
+            "assets/"
+          ]
+        },
+        "skillRuntime": {
+          "skillDir": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design",
+          "deterministicToolDir": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling",
+          "toolPaths": {
+            "applyHtmlHeadContract": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs",
+            "recordDispatchCompletion": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs",
+            "buildPageDispatchManifest": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/build-page-dispatch-manifest.mjs",
+            "validateDesignWorkspace": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/validate-design-workspace.mjs",
+            "validateFinishReadiness": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/validate-finish-readiness.mjs",
+            "validateRestoreContract": "/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/validate-restore-contract.mjs"
+          },
+          "requiredForPageSubAgent": [
+            "applyHtmlHeadContract",
+            "recordDispatchCompletion"
+          ],
+          "pathInjection": "absolute",
+          "pathContract": "Do not use {SKILL_DIR} placeholders inside Page Sub-Agent packets; use toolPaths.* absolute paths.",
+          "commandTemplates": {
+            "recordDispatchCompletion": "node '/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/record-dispatch-completion.mjs' '/Users/yezeming/Projects/CallChain/callchain-redesign' --node-id='page-empty-state' --html-src='pages/empty-state.html' --status=completed --changed-files=<comma-separated-project-relative-files> --trace-digest=<main-agent-runtime-trace-digest> --tool-ledger-json=<tool-ledger-json-or-file>"
+          }
+        },
+        "cssFilePath": "/Users/yezeming/Projects/CallChain/callchain-redesign/colors_and_type.css",
+        "htmlFilePath": "/Users/yezeming/Projects/CallChain/callchain-redesign/pages/empty-state.html",
+        "brandPrefix": "brand",
+        "aestheticsMode": "free-explore",
+        "toolDisciplineBlockPresent": true,
+        "fillHtmlHeadCommand": "node '/Users/yezeming/.trae-cn/builtin/design/default/skills/solo-design/shared-runtime/deterministic-tooling/apply-html-head-contract.mjs' '/Users/yezeming/Projects/CallChain/callchain-redesign/colors_and_type.css' '/Users/yezeming/Projects/CallChain/callchain-redesign/pages/empty-state.html' --title='欢迎页' --lang='zh-CN' --prefix='brand'",
+        "headFillMode": "skeleton-first",
+        "viewportMode": "app-shell",
+        "completionSchemaExpected": "compact",
+        "restoreFields": null,
+        "restoreContractStatus": null,
+        "restoreCompactPacket": null,
+        "deterministicCommands": null,
+        "sourceAuthorityLock": null,
+        "preDispatchFileHashes": {
+          "callchain-redesign.design": "51b9e5937e61cc01977b4d7ed2df6d2243d9017803a212acf2851c4686997ea2"
+        },
+        "contextPreflight": {
+          "workflowPath": "intent-workflows/intent-page-free-exploration/INTENT_WORKFLOW.md",
+          "requiredContextFiles": [
+            "shared-runtime/runtime-boundaries/lane-runtime-contracts.md",
+            "shared-runtime/agent-dispatch-runtime/lane-dispatch-index.md",
+            "delivery-quality/page-rendering-quality-gate.md",
+            "delivery-quality/design-artifact-validation.md",
+            "delivery-quality/delivery-evidence-contract.md",
+            "visual-experience/visual-experience-guidelines.md"
+          ],
+          "optionalContextFiles": [],
+          "passed": true
+        },
+        "pageSliceOnly": true,
+        "requiredFieldsPresent": true,
+        "missingFields": [],
+        "fillHtmlHeadCommandValid": true,
+        "mobileNavigation": {
+          "required": false,
+          "appliesToThisPage": false,
+          "canonicalHtmlIncluded": false,
+          "missingFields": []
+        },
+        "persistedToSummary": true,
+        "taskQueryAudited": false,
+        "proofSource": "summary-only",
+        "largeWorkflowFilesInTaskQuery": null
+      }
+    ],
+    "readScopeLedger": [
+      {
+        "actor": "page-sub-agent",
+        "lane": "free_exploration",
+        "path": "intent-workflows/intent-page-free-exploration/free-exploration-page-runtime.md",
+        "reason": "page runtime guide",
+        "scopeClass": "page-runtime",
+        "declaredBeforeRead": true,
+        "recordedAt": "2026-08-24T03:23:35.182Z",
+        "nodeId": "page-main-active",
+        "htmlSrc": "pages/main-active.html"
+      },
+      {
+        "actor": "page-sub-agent",
+        "lane": "free_exploration",
+        "path": "intent-workflows/intent-page-free-exploration/dispatch-contract.md",
+        "reason": "dispatch contract",
+        "scopeClass": "dispatch-contract",
+        "declaredBeforeRead": true,
+        "recordedAt": "2026-08-24T03:23:35.182Z",
+        "nodeId": "page-main-active",
+        "htmlSrc": "pages/main-active.html"
+      }
+    ],
+    "validationHistory": [
+      {
+        "reportPath": "validation-report.json",
+        "reportHash": "a7ec8c27a6624baeacbf217d0fd8a83e070429e3bef06b2796733eb4107fe705",
+        "checkedAt": "2026-08-24T03:43:04.372Z",
+        "success": false,
+        "exitCode": 1,
+        "renderBlockingErrorCount": 4,
+        "repairPlanHints": [
+          "hardcoded-color-in-body"
+        ],
+        "errorSignatures": [
+          {
+            "errorClass": "app-shell-viewport",
+            "normalized": "[app-shell-viewport] pages/main-active.html: app-shell pages must declare data-scroll-region=\"primary\" on a class list containing overflow-y-auto.",
+            "signature": "ac7f19d1cea65a2c2dc523e95231c8c6fbf811ade2638bf51c3560d7f4f894ba"
+          },
+          {
+            "errorClass": "app-shell-viewport",
+            "normalized": "[app-shell-viewport] pages/empty-state.html: app-shell pages must declare data-scroll-region=\"primary\" on a class list containing overflow-y-auto.",
+            "signature": "fcd4bb8ed140605ed0103e2463f6c1d6ef1c1563554bfca2dd509cb3036a02cb"
+          },
+          {
+            "errorClass": "app-shell-viewport",
+            "normalized": "[app-shell-viewport] pages/empty-state.html: app-shell page still looks like natural document flow (min-h-screen) without a complete internal scroll shell.",
+            "signature": "2a164b432054e2cdd9c03e194f8df532493c22574a39131ff5bc6457ea9967c2"
+          },
+          {
+            "errorClass": "dispatch-preflight-or-ownership",
+            "normalized": "[dispatch-changed-files] project.expectedDispatches[] is required when dispatchPreflightManifest[] exists",
+            "signature": "1863095a5236c379a633d22a8424261bfcde770ff9ab246147a2326cba87f6fd"
+          }
+        ],
+        "terminalState": null
+      },
+      {
+        "reportPath": "validation-report.json",
+        "reportHash": "1aa735b76db5873ab4d36d6da19d931ea22a395a43d13cc669113a4391a16b46",
+        "checkedAt": "2026-08-24T03:46:48.110Z",
+        "success": true,
+        "exitCode": 0,
+        "renderBlockingErrorCount": 0,
+        "repairPlanHints": [
+          "hardcoded-color-in-body"
+        ],
+        "errorSignatures": [],
+        "terminalState": null
+      }
+    ],
+    "validationRepairLedger": [
+      {
+        "failedReportPath": "validation-report.json",
+        "failedReportHash": "a7ec8c27a6624baeacbf217d0fd8a83e070429e3bef06b2796733eb4107fe705",
+        "repairWorkflowReadPath": "intent-workflows/intent-project-mutation/main-agent-repair-workflow.md",
+        "repairStartedAt": "2026-08-24T03:45:11.589Z",
+        "repairEntryStatus": "revalidated-success",
+        "ownerTriage": [
+          {
+            "owner": "sub-agent",
+            "errorClass": "hardcoded-color-in-body",
+            "affectedFiles": [
+              "main-active.html"
+            ],
+            "repairScope": "targeted-token-replace",
+            "strategy": "targeted_token_replace_once"
+          }
+        ],
+        "repairPlanHints": [
+          {
+            "errorClass": "hardcoded-color-in-body",
+            "owner": "sub-agent",
+            "repairScope": "targeted-token-replace",
+            "strategy": "targeted_token_replace_once",
+            "affectedFiles": [
+              "main-active.html"
+            ],
+            "repairReportPath": null,
+            "repairAlreadyAttempted": false,
+            "allowSourceRead": "no-full-html-read",
+            "maxValidationRuns": 2
+          }
+        ],
+        "repairActions": [
+          {
+            "owner": "main-agent",
+            "errorClass": "unknown-blocking",
+            "affectedFiles": [
+              "pages/main-active.html",
+              "pages/empty-state.html"
+            ],
+            "action": "targeted_html_attribute_fix",
+            "observedFileHashes": [
+              {
+                "path": "pages/main-active.html",
+                "hash": "069e9da37deb2f00988cc4d34af47a4054b92512f9ccd46926e5bdd079d29fce"
+              },
+              {
+                "path": "pages/empty-state.html",
+                "hash": "25325bd6350a75482fa3355a8fd8ae0ea42a982f267f9a2dcad9f5f61935e357"
+              }
+            ],
+            "preEditFileHashes": [],
+            "postEditFileHashes": [],
+            "repairOwnedFields": [
+              "unknown-blocking"
+            ],
+            "recordedAt": "2026-08-24T03:45:51.226Z",
+            "repairActionTableRequired": true
+          }
+        ],
+        "revalidationReportPath": "validation-report.json",
+        "revalidationReportHash": "1aa735b76db5873ab4d36d6da19d931ea22a395a43d13cc669113a4391a16b46",
+        "revalidationSuccess": true,
+        "blockedReason": null,
+        "revalidationRecordedAt": "2026-08-24T03:46:58.402Z"
+      }
+    ],
+    "repairEntryEvidence": [
+      {
+        "failedReportPath": "validation-report.json",
+        "failedReportHash": "a7ec8c27a6624baeacbf217d0fd8a83e070429e3bef06b2796733eb4107fe705",
+        "repairWorkflowReadPath": "intent-workflows/intent-project-mutation/main-agent-repair-workflow.md",
+        "repairStartedAt": "2026-08-24T03:45:11.589Z",
+        "ledgerIndex": 0,
+        "ownerTriageCount": 1,
+        "repairActionCount": 1,
+        "revalidationReportPath": "validation-report.json",
+        "revalidationReportHash": "1aa735b76db5873ab4d36d6da19d931ea22a395a43d13cc669113a4391a16b46",
+        "revalidationSuccess": true
+      }
+    ],
+    "expectedDispatches": [
+      {
+        "nodeId": "page-main-active",
+        "pageId": "page-main-active",
+        "targetPageId": "page-main-active",
+        "htmlSrc": "pages/main-active.html",
+        "packetType": "FreePagePacket",
+        "status": "completed",
+        "changedFiles": [
+          "pages/main-active.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "1aa681c808425b6966d8e08a429ba1b5fd79bc1a5ad2010ce2faa89e96d5352e",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-08-24T03:46:04.585Z",
+        "source": "record-dispatch-completion.mjs"
+      },
+      {
+        "nodeId": "page-empty-state",
+        "pageId": "page-empty-state",
+        "targetPageId": "page-empty-state",
+        "htmlSrc": "pages/empty-state.html",
+        "packetType": "FreePagePacket",
+        "status": "completed",
+        "changedFiles": [
+          "pages/empty-state.html"
+        ],
+        "toolCallLedger": {
+          "source": "main-agent-runtime-trace",
+          "traceDigest": "8d811c38dad9c42851c20126762e1322358458d1f9f0ce645392d40cc8a9de22",
+          "todoWriteCalls": 0,
+          "previewCalls": 0,
+          "validationScriptCalls": 0,
+          "helperScriptWrites": 0
+        },
+        "recordedAt": "2026-08-24T03:46:05.504Z",
+        "source": "record-dispatch-completion.mjs"
+      }
+    ],
+    "mainAgentPostDispatchMutations": []
+  },
+  "pages": [
+    {
+      "nodeId": "page-main-active",
+      "htmlSrc": "pages/main-active.html",
+      "title": "主界面",
+      "writeMode": "SkeletonMainAtomic",
+      "viewportMode": "app-shell",
+      "pageType": "information-dense",
+      "stateGroupId": null,
+      "stateRole": null
+    },
+    {
+      "nodeId": "page-empty-state",
+      "htmlSrc": "pages/empty-state.html",
+      "title": "欢迎页",
+      "writeMode": "SkeletonMainAtomic",
+      "viewportMode": "app-shell",
+      "pageType": "showcase",
+      "stateGroupId": null,
+      "stateRole": null
+    }
+  ],
+  "designSource": {
+    "operatingMode": "free-explore",
+    "libraryIdentity": null,
+    "brandPrefix": "brand",
+    "cssFilePath": "colors_and_type.css"
+  }
+}

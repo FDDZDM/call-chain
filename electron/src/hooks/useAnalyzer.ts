@@ -138,7 +138,7 @@ export function useAnalyzer() {
 
   // 构建调用图
   const buildGraph = useCallback(
-    (anchorId: string, callerDepth = 3, calleeDepth = 3) => {
+    (anchorId: string, callerDepth = 5, calleeDepth = 5) => {
       setError(null)
       send({ type: 'buildGraph', anchorId, callerDepth, calleeDepth })
     },

@@ -1,0 +1,47 @@
+/* CallChain 美化设计 — 深色开发者工具主题 */
+
+:root {
+  /* ── 基础背景层 ── */
+  --brand-background: #0d1117;
+  --brand-foreground: #e6edf3;
+
+  /* ── 卡片/面板层 ── */
+  --brand-card: #161b22;
+  --brand-card-foreground: #e6edf3;
+
+  /* ── 弹出层 ── */
+  --brand-popover: #1c2330;
+  --brand-popover-foreground: #e6edf3;
+
+  /* ── 主色 (Indigo) ── */
+  --brand-primary: #6366f1;
+  --brand-primary-foreground: #ffffff;
+
+  /* ── 次要文本/静默色 ── */
+  --brand-muted: #21262d;
+  --brand-muted-foreground: #8b949e;
+
+  /* ── 边框/输入/焦点环 ── */
+  --brand-border: #30363d;
+  --brand-input: #30363d;
+  --brand-ring: #6366f1;
+
+  /* ── 圆角 ── */
+  --brand-radius-sm: 4px;
+  --brand-radius-md: 8px;
+  --brand-radius-lg: 12px;
+}
+
+/* ── 字体 ── */
+:root {
+  --brand-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif;
+  --brand-font-mono: "SF Mono", "Cascadia Code", "JetBrains Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
+}
+
+/* ── 语义状态色 ── */
+:root {
+  --state-success: #3ee85a;
+  --state-warning: #f59e0b;
+  --state-error: #f85149;
+  --state-info: #6366f1;
+}

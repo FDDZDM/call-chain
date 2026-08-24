@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢迎页</title>
+    <style id="theme-vars">
+/* CallChain 美化设计 — 深色开发者工具主题 */
+
+:root {
+  /* ── 基础背景层 ── */
+  --brand-background: #0d1117;
+  --brand-foreground: #e6edf3;
+
+  /* ── 卡片/面板层 ── */
+  --brand-card: #161b22;
+  --brand-card-foreground: #e6edf3;
+
+  /* ── 弹出层 ── */
+  --brand-popover: #1c2330;
+  --brand-popover-foreground: #e6edf3;
+
+  /* ── 主色 (Indigo) ── */
+  --brand-primary: #6366f1;
+  --brand-primary-foreground: #ffffff;
+
+  /* ── 次要文本/静默色 ── */
+  --brand-muted: #21262d;
+  --brand-muted-foreground: #8b949e;
+
+  /* ── 边框/输入/焦点环 ── */
+  --brand-border: #30363d;
+  --brand-input: #30363d;
+  --brand-ring: #6366f1;
+
+  /* ── 圆角 ── */
+  --brand-radius-sm: 4px;
+  --brand-radius-md: 8px;
+  --brand-radius-lg: 12px;
+}
+
+/* ── 字体 ── */
+:root {
+  --brand-font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Noto Sans SC", sans-serif;
+  --brand-font-mono: "SF Mono", "Cascadia Code", "JetBrains Mono", "Fira Code", ui-monospace, Menlo, Consolas, monospace;
+}
+
+/* ── 语义状态色 ── */
+:root {
+  --state-success: #3ee85a;
+  --state-warning: #f59e0b;
+  --state-error: #f85149;
+  --state-info: #6366f1;
+}
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.1/dist/index.global.js"></script>
+    <script src="https://unpkg.com/lucide@1.8.0/dist/umd/lucide.min.js"></script>
+    <style type="text/tailwindcss">
+  @theme inline {
+    --color-background: var(--brand-background);
+    --color-foreground: var(--brand-foreground);
+    --color-card: var(--brand-card);
+    --color-card-foreground: var(--brand-card-foreground);
+    --color-popover: var(--brand-popover);
+    --color-popover-foreground: var(--brand-popover-foreground);
+    --color-primary: var(--brand-primary);
+    --color-primary-foreground: var(--brand-primary-foreground);
+    --color-muted: var(--brand-muted);
+    --color-muted-foreground: var(--brand-muted-foreground);
+    --color-border: var(--brand-border);
+    --color-input: var(--brand-input);
+    --color-ring: var(--brand-ring);
+    --radius-sm: var(--brand-radius-sm);
+    --radius-md: var(--brand-radius-md);
+    --radius-lg: var(--brand-radius-lg);
+  }
+  @layer base {
+    body { background: var(--brand-background); color: var(--brand-foreground); }
+    td, th { @apply break-words; word-break: break-all; word-break: auto-phrase; }
+    th { @apply whitespace-nowrap; }
+  }
+    </style>
+    <style id="semantic-token-fallback">
+      .bg-background { background-color: var(--brand-background); }
+      .text-background { color: var(--brand-background); }
+      .border-background { border-color: var(--brand-background); }
+      .ring-background { --tw-ring-color: var(--brand-background); }
+      .bg-foreground { background-color: var(--brand-foreground); }
+      .text-foreground { color: var(--brand-foreground); }
+      .border-foreground { border-color: var(--brand-foreground); }
+      .ring-foreground { --tw-ring-color: var(--brand-foreground); }
+      .bg-card { background-color: var(--brand-card); }
+      .text-card { color: var(--brand-card); }
+      .border-card { border-color: var(--brand-card); }
+      .ring-card { --tw-ring-color: var(--brand-card); }
+      .bg-card-foreground { background-color: var(--brand-card-foreground); }
+      .text-card-foreground { color: var(--brand-card-foreground); }
+      .border-card-foreground { border-color: var(--brand-card-foreground); }
+      .ring-card-foreground { --tw-ring-color: var(--brand-card-foreground); }
+      .bg-popover { background-color: var(--brand-popover); }
+      .text-popover { color: var(--brand-popover); }
+      .border-popover { border-color: var(--brand-popover); }
+      .ring-popover { --tw-ring-color: var(--brand-popover); }
+      .bg-popover-foreground { background-color: var(--brand-popover-foreground); }
+      .text-popover-foreground { color: var(--brand-popover-foreground); }
+      .border-popover-foreground { border-color: var(--brand-popover-foreground); }
+      .ring-popover-foreground { --tw-ring-color: var(--brand-popover-foreground); }
+      .bg-primary { background-color: var(--brand-primary); }
+      .text-primary { color: var(--brand-primary); }
+      .border-primary { border-color: var(--brand-primary); }
+      .ring-primary { --tw-ring-color: var(--brand-primary); }
+      .bg-primary-foreground { background-color: var(--brand-primary-foreground); }
+      .text-primary-foreground { color: var(--brand-primary-foreground); }
+      .border-primary-foreground { border-color: var(--brand-primary-foreground); }
+      .ring-primary-foreground { --tw-ring-color: var(--brand-primary-foreground); }
+      .bg-muted { background-color: var(--brand-muted); }
+      .text-muted { color: var(--brand-muted); }
+      .border-muted { border-color: var(--brand-muted); }
+      .ring-muted { --tw-ring-color: var(--brand-muted); }
+      .bg-muted-foreground { background-color: var(--brand-muted-foreground); }
+      .text-muted-foreground { color: var(--brand-muted-foreground); }
+      .border-muted-foreground { border-color: var(--brand-muted-foreground); }
+      .ring-muted-foreground { --tw-ring-color: var(--brand-muted-foreground); }
+      .bg-border { background-color: var(--brand-border); }
+      .text-border { color: var(--brand-border); }
+      .border-border { border-color: var(--brand-border); }
+      .ring-border { --tw-ring-color: var(--brand-border); }
+      .bg-input { background-color: var(--brand-input); }
+      .text-input { color: var(--brand-input); }
+      .border-input { border-color: var(--brand-input); }
+      .ring-input { --tw-ring-color: var(--brand-input); }
+      .bg-ring { background-color: var(--brand-ring); }
+      .text-ring { color: var(--brand-ring); }
+      .border-ring { border-color: var(--brand-ring); }
+      .ring-ring { --tw-ring-color: var(--brand-ring); }
+    </style>
+    <style>
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      [data-icon] {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        -webkit-mask-position: center;
+        mask-position: center;
+        background-color: currentColor;
+      }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased">
+    <main data-viewport-mode="app-shell" data-scroll-region="primary" class="overflow-y-auto">
+    <style id="critical-layout">
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+        body {
+            font-family: var(--brand-font-sans);
+        }
+        [data-viewport-mode="app-shell"] {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── TopBar ── */
+        .topbar {
+            height: 44px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-left: 80px;
+            padding-right: 16px;
+            background: var(--brand-card);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--brand-border);
+        }
+        .topbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .topbar-brand-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--brand-foreground);
+            line-height: 1;
+        }
+        .btn-topbar {
+            background: var(--brand-primary);
+            color: var(--brand-primary-foreground);
+            padding: 6px 14px;
+            border-radius: var(--brand-radius-md);
+            font-size: 12px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: filter 0.15s ease;
+        }
+        .btn-topbar:hover {
+            filter: brightness(1.1);
+        }
+        .btn-topbar svg { width: 14px; height: 14px; }
+
+        /* ── Hero ── */
+        .hero {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: radial-gradient(ellipse 800px 600px at 50% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+            overflow: hidden;
+        }
+        .hero-decor {
+            position: absolute;
+            z-index: 0;
+            pointer-events: none;
+        }
+        .hero-decor svg { display: block; }
+        .hero-content {
+            max-width: 520px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            position: relative;
+            z-index: 1;
+        }
+        .hero-logo {
+            margin-bottom: 8px;
+            filter: drop-shadow(0 4px 20px rgba(99, 102, 241, 0.3));
+        }
+        .hero-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--brand-foreground);
+            letter-spacing: -0.5px;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .hero-subtitle {
+            font-size: 15px;
+            color: var(--brand-muted-foreground);
+            line-height: 1.6;
+            max-width: 400px;
+            margin: 0;
+        }
+        .btn-primary-cta {
+            margin-top: 8px;
+            background: var(--brand-primary);
+            color: var(--brand-primary-foreground);
+            padding: 12px 28px;
+            border-radius: var(--brand-radius-lg);
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+        .btn-primary-cta:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+        .btn-primary-cta svg { width: 18px; height: 18px; }
+
+        /* ── Feature Pills ── */
+        .feature-pills {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .feature-pill {
+            background: var(--brand-card);
+            border: 1px solid var(--brand-border);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            color: var(--brand-muted-foreground);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            white-space: nowrap;
+        }
+        .feature-pill svg { width: 12px; height: 12px; }
+
+        /* ── Shortcut Hint ── */
+        .shortcut-hint {
+            margin-top: 24px;
+            font-size: 11px;
+            color: var(--brand-muted-foreground);
+            margin-bottom: 0;
+            line-height: 1.8;
+        }
+        kbd {
+            background: var(--brand-muted);
+            border: 1px solid var(--brand-border);
+            border-radius: var(--brand-radius-sm);
+            padding: 1px 6px;
+            font-size: 10px;
+            font-family: var(--brand-font-mono);
+            color: var(--brand-foreground);
+            display: inline-block;
+            line-height: 1.4;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition: none !important;
+                animation: none !important;
+            }
+            .btn-primary-cta:hover {
+                transform: none !important;
+            }
+        }
+    </style>
+
+    <!-- ── TopBar ── -->
+    <header class="topbar">
+        <div class="topbar-brand">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <defs>
+                    <linearGradient id="topbarChainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#6366f1" />
+                        <stop offset="100%" stop-color="#818cf8" />
+                    </linearGradient>
+                </defs>
+                <path fill-rule="evenodd" fill="url(#topbarChainGradient)" d="M 5 9 h 8 a 3 3 0 0 1 3 3 a 3 3 0 0 1 -3 3 h -8 a 3 3 0 0 1 -3 -3 a 3 3 0 0 1 3 -3 Z M 6 11 h 6 a 1 1 0 0 1 1 1 a 1 1 0 0 1 -1 1 h -6 a 1 1 0 0 1 -1 -1 a 1 1 0 0 1 1 -1 Z" />
+                <path fill-rule="evenodd" fill="url(#topbarChainGradient)" d="M 12 2 a 3 3 0 0 1 3 3 v 8 a 3 3 0 0 1 -3 3 a 3 3 0 0 1 -3 -3 v -8 a 3 3 0 0 1 3 -3 Z M 12 5 a 1 1 0 0 1 1 1 v 6 a 1 1 0 0 1 -1 1 a 1 1 0 0 1 -1 -1 v -6 a 1 1 0 0 1 1 -1 Z" />
+            </svg>
+            <span class="topbar-brand-text">CallChain</span>
+        </div>
+        <button class="btn-topbar" type="button">
+            <i data-lucide="folder-open"></i>
+            打开项目
+        </button>
+    </header>
+
+    <!-- ── Hero ── -->
+    <section class="hero">
+        <!-- Decorative background shapes -->
+        <div class="hero-decor" style="top: -120px; left: -120px; opacity: 0.03;">
+            <svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="200" cy="200" r="200" fill="var(--brand-primary)" />
+            </svg>
+        </div>
+        <div class="hero-decor" style="bottom: -160px; right: -160px; opacity: 0.03;">
+            <svg width="500" height="500" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <circle cx="250" cy="250" r="250" fill="var(--brand-primary)" />
+            </svg>
+        </div>
+
+        <div class="hero-content">
+            <!-- Logo: interlocking chain links -->
+            <svg class="hero-logo" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <defs>
+                    <linearGradient id="chainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#6366f1" />
+                        <stop offset="100%" stop-color="#818cf8" />
+                    </linearGradient>
+                </defs>
+                <!-- Horizontal link -->
+                <path fill-rule="evenodd" fill="url(#chainGradient)" d="M 20 32 h 40 a 8 8 0 0 1 8 8 a 8 8 0 0 1 -8 8 h -40 a 8 8 0 0 1 -8 -8 a 8 8 0 0 1 8 -8 Z M 26 36 h 28 a 4 4 0 0 1 4 4 a 4 4 0 0 1 -4 4 h -28 a 4 4 0 0 1 -4 -4 a 4 4 0 0 1 4 -4 Z" />
+                <!-- Vertical link (crossing at 90 degrees) -->
+                <path fill-rule="evenodd" fill="url(#chainGradient)" d="M 40 12 a 8 8 0 0 1 8 8 v 40 a 8 8 0 0 1 -8 8 a 8 8 0 0 1 -8 -8 v -40 a 8 8 0 0 1 8 -8 Z M 40 22 a 4 4 0 0 1 4 4 v 28 a 4 4 0 0 1 -4 4 a 4 4 0 0 1 -4 -4 v -28 a 4 4 0 0 1 4 -4 Z" />
+            </svg>
+
+            <!-- Title -->
+            <h1 class="hero-title">CallChain</h1>
+
+            <!-- Subtitle -->
+            <p class="hero-subtitle">代码调用链查看器 — 打开任意项目，⌘+点击函数名即可可视化调用链</p>
+
+            <!-- Primary CTA Button -->
+            <button class="btn-primary-cta" type="button">
+                <i data-lucide="folder-open"></i>
+                打开项目…
+            </button>
+
+            <!-- Feature Pills -->
+            <div class="feature-pills">
+                <span class="feature-pill">
+                    <i data-lucide="code"></i>
+                    多语言解析
+                </span>
+                <span class="feature-pill">
+                    <i data-lucide="git-branch"></i>
+                    调用链图
+                </span>
+                <span class="feature-pill">
+                    <i data-lucide="search"></i>
+                    语句级查询
+                </span>
+            </div>
+
+            <!-- Shortcut Hint -->
+            <p class="shortcut-hint">
+                快捷键 <kbd>⌘O</kbd> 打开项目 · <kbd>⌘</kbd>+点击函数名查看调用链
+            </p>
+        </div>
+    </section>
+    </main>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+{
+  "data": [
+    {
+      "id": "page-main-active",
+      "title": "主界面 — 调用链分析",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1745452800000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 900,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-4b2aaa8b",
+          "measuredAt": 1787543239048
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/main-active.html",
+        "interactions": []
+      }
+    },
+    {
+      "id": "page-empty-state",
+      "title": "空状态 — 欢迎页",
+      "type": "page",
+      "version": 1,
+      "createdAt": 1745452800000,
+      "canvasData": {
+        "x": 480,
+        "y": 0,
+        "group": 0,
+        "layoutSnapshot": {
+          "version": 1,
+          "contentHeight": 900,
+          "viewportWidth": 1440,
+          "sourceHash": "fnv1a-b1b3c533",
+          "measuredAt": 1787543239048
+        }
+      },
+      "devMetadata": {
+        "htmlSrc": "pages/empty-state.html",
+        "interactions": []
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "desktop",
+    "projectName": "CallChain 美化设计"
+  }
+}
