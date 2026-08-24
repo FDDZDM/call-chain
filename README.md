@@ -6,6 +6,9 @@
 当前主线为 **Electron 跨平台版本**（`electron/`，tree-sitter 语法级解析，深色主题界面）；
 早期 macOS 原生 SwiftUI 版本（`Sources/`）保留在仓库中，详见文末。
 
+后续开发请先阅读 [开发路线图](docs/DEVELOPMENT_ROADMAP.md)：其中记录了当前验证基线、
+P0 风险、分阶段实施顺序与各里程碑验收标准。
+
 ## 特性
 
 - **语法级解析**：基于 tree-sitter（wasm）语法树提取函数符号与调用点，

@@ -1,7 +1,8 @@
 # CallChain · Electron 重写设计
 
 **日期**: 2026-08-20
-**状态**: 已确认，待用户过目后进入实现计划
+**状态**: 历史设计基线；核心链路已在 Electron 1.1 部分落地，后续实施以
+[开发路线图](../../DEVELOPMENT_ROADMAP.md) 为准
 **作者**: brainstorming 协作产物（用户 + 助手）
 
 ---
