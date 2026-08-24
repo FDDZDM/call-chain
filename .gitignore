@@ -1,0 +1,10 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Native app artifacts
+dist/
+
+# macOS / editors
+.DS_Store
+*.xcuserstate

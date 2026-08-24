@@ -1,5 +1,5 @@
 // scripts/test-graph-builder.mjs
-// 验证链路语义 BFS：方向一致的父子关系、level 语义、聚合
+// 验证链路语义 BFS：方向、源码顺序、共享分支与完整节点
 
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -17,9 +17,9 @@ const { buildGraph, buildGraphInput } = await import(
 //   main() → handleRequest() → validateUser() → formatError()   [下游链]
 //   main() → handleRequest() → queryDB()
 //   route() → handleRequest()                                   [上游链]
-//   validateUser() → parseToken()  (util，将被聚合)
-//   validateUser() → checkScope() (util，将被聚合)
-//   handleRequest() → logRequest() (util，将被聚合)
+//   validateUser() → parseToken()
+//   validateUser() → checkScope()
+//   handleRequest() → logRequest()
 //   handleRequest() → sendResponse()
 //   无关节点：other() → unrelated()
 //   旁支：validateUser() → notify()（作为被调用者的下游）
@@ -49,16 +49,16 @@ const mk = (name, className = '') => ({
   paramSignature: '()',
   docComment: null,
 })
-const mkCall = (callerName, calleeName, status = 'resolved') => {
+const mkCall = (callerName, calleeName, line, status = 'resolved') => {
   const caller = mk(callerName)
   const callee = mk(calleeName)
   return {
     id: `call-${callerName}-${calleeName}`,
-    callerFile: file,
+    file,
     callerFunctionId: caller.id,
     calleeName,
     resolvedCalleeId: status === 'resolved' ? callee.id : null,
-    line: 1, col: 1, endLine: 1, endCol: 5,
+    line, col: 1, code: `${calleeName}()`,
     status,
     calleeKind: 'function',
   }
@@ -73,17 +73,18 @@ const functions = [
   mk('other'), mk('unrelated'),
 ]
 const calls = [
-  mkCall('main', 'handleRequest'),
-  mkCall('route', 'handleRequest'),
-  mkCall('handleRequest', 'validateUser'),
-  mkCall('handleRequest', 'queryDB'),
-  mkCall('handleRequest', 'sendResponse'),
-  mkCall('validateUser', 'formatError'),
-  mkCall('validateUser', 'parseToken'),
-  mkCall('validateUser', 'checkScope'),
-  mkCall('validateUser', 'notify'),
-  mkCall('handleRequest', 'logRequest'),
-  mkCall('other', 'unrelated'),
+  mkCall('main', 'handleRequest', 2),
+  mkCall('route', 'handleRequest', 2),
+  mkCall('handleRequest', 'validateUser', 10),
+  mkCall('handleRequest', 'queryDB', 11),
+  mkCall('handleRequest', 'sendResponse', 12),
+  mkCall('validateUser', 'formatError', 20),
+  mkCall('validateUser', 'parseToken', 21),
+  mkCall('validateUser', 'checkScope', 22),
+  mkCall('validateUser', 'notify', 23),
+  mkCall('queryDB', 'notify', 30), // 菱形 DAG：共享下游
+  mkCall('handleRequest', 'logRequest', 13),
+  mkCall('other', 'unrelated', 2),
 ]
 
 const input = buildGraphInput([
@@ -113,7 +114,9 @@ check(nodeByName.get('validateUser').level === 1, 'validateUser（被调用者�
 check(nodeByName.get('queryDB').level === 1, 'queryDB level = 1')
 check(nodeByName.get('sendResponse').level === 1, 'sendResponse level = 1')
 check(nodeByName.get('notify').level === 2, 'notify level = 2（validateUser 下游）')
-// formatError/parseToken/checkScope 是 util 类 → 被聚合为 🔧 簇，不作为独立函数节点
+check(nodeByName.get('formatError').level === 2, 'formatError level = 2')
+check(nodeByName.get('parseToken').level === 2, 'parseToken level = 2')
+check(nodeByName.get('checkScope').level === 2, 'checkScope level = 2')
 check(nodeByName.get('other') === undefined, '无关节点 other 不在图中')
 check(nodeByName.get('unrelated') === undefined, '无关节点 unrelated 不在图中')
 
@@ -127,13 +130,12 @@ const vuNode = nodeByName.get('validateUser')
 const vuChildNames = vuNode.childIds.map((id) => {
   const n = graph.nodes.find((x) => x.id === id)
   if (!n) return '?'
-  if (n.nodeType === 'aggregate') return `🔧(${n.aggregatedIds.map((m) => m.split('::')[3]).join(',')})`
   return n.def.name
 })
 console.log(`  validateUser 的 childIds: [${vuChildNames.join(', ')}]`)
 check(
   vuChildNames.every((c) =>
-    ['formatError', 'notify'].includes(c) || c.startsWith('🔧(parseToken') || c.includes('parseToken') || c.includes('checkScope')
+    ['formatError', 'parseToken', 'checkScope', 'notify'].includes(c)
   ),
   'validateUser 的子节点全部是它的被调用者（下游），无上游节点'
 )
@@ -146,7 +148,6 @@ check(
 const anchorChildNames = anchorNode.childIds.map((id) => {
   const n = graph.nodes.find((x) => x.id === id)
   if (!n) return '?'
-  if (n.nodeType === 'aggregate') return `🔧(${n.aggregatedIds.map((m) => m.split('::')[3]).join(',')})`
   return n.def.name
 })
 console.log(`  锚点 handleRequest 的 childIds: [${anchorChildNames.join(', ')}]`)
@@ -154,31 +155,21 @@ check(anchorChildNames.includes('main'), '锚点子节点包含调用者 main')
 check(anchorChildNames.includes('route'), '锚点子节点包含调用者 route')
 check(anchorChildNames.includes('validateUser'), '锚点子节点包含被调用者 validateUser')
 check(anchorChildNames.includes('queryDB'), '锚点子节点包含被调用者 queryDB')
+check(
+  anchorChildNames.filter((name) => ['validateUser', 'queryDB', 'sendResponse', 'logRequest'].includes(name)).join(',')
+    === 'validateUser,queryDB,sendResponse,logRequest',
+  '锚点下游保持源码调用顺序'
+)
 
 console.log('\n-- parentId 链 --')
 check(nodeByName.get('main').parentId === anchor.id, 'main 的 parent 是锚点')
 check(nodeByName.get('validateUser').parentId === anchor.id, 'validateUser 的 parent 是锚点')
 check(nodeByName.get('notify').parentId === nodeByName.get('validateUser').id, 'notify 的 parent 是 validateUser')
 
-console.log('\n-- 智能聚合 --')
-const aggNodes = graph.nodes.filter((n) => n.nodeType === 'aggregate')
-console.log(`  聚合节点数: ${aggNodes.length}`)
-for (const a of aggNodes) {
-  console.log(`    ${a.id}: 成员 [${a.aggregatedIds.map((m) => m.split('::')[3]).join(', ')}], level ${a.level}, parent ${a.parentId?.split('::')[3] ?? 'null'}`)
-}
-// validateUser 的 util 子节点（parseToken, checkScope, formatError）应聚合
-const vuAgg = aggNodes.find((a) => a.parentId === vuNode.id)
-check(!!vuAgg, 'validateUser 的工具函数子节点被聚合为 🔧 簇')
-if (vuAgg) {
-  const memberNames = vuAgg.aggregatedIds.map((m) => m.split('::')[3]).sort()
-  check(memberNames.join(',') === 'checkScope,formatError,parseToken', `聚合成员 = [checkScope, formatError, parseToken]，实际 [${memberNames.join(',')}]`)
-  check(vuAgg.level === 2, '聚合节点 level = 2（与成员同层）')
-}
-// 锚点的 util 子节点 logRequest 只有 1 个 → 不聚合
-check(
-  anchorChildNames.includes('logRequest'),
-  '锚点的单个工具函数子节点 logRequest 不聚合（数量 < 2）'
-)
+console.log('\n-- 完整性与共享分支 --')
+check(graph.nodes.every((n) => n.nodeType === 'function'), '分析层不提前聚合真实函数')
+check(nodeByName.get('queryDB').childIds.includes(nodeByName.get('notify').id), '共享下游 notify 保留在 queryDB 分支')
+check(nodeByName.get('validateUser').childIds.includes(nodeByName.get('notify').id), '共享下游 notify 保留在 validateUser 分支')
 
 console.log('\n-- 边语义 --')
 const edgeKeys = graph.edges.map((e) => {
@@ -191,13 +182,13 @@ const edgeKeys = graph.edges.map((e) => {
 console.log(`  边: [${edgeKeys.join(', ')}]`)
 check(edgeKeys.includes('main→handleRequest'), '边 main→handleRequest 存在')
 check(edgeKeys.includes('handleRequest→validateUser'), '边 handleRequest→validateUser 存在')
-check(edgeKeys.includes('validateUser→🔧'), '边 validateUser→🔧 存在（formatError 等被聚合后重定向）')
+check(edgeKeys.includes('validateUser→formatError'), '边 validateUser→formatError 存在')
 check(!edgeKeys.includes('other→unrelated'), '无关节点的边不存在')
 
 function nodeByIdName(g, id) {
   const n = g.nodes.find((x) => x.id === id)
   if (!n) return '?'
-  return n.nodeType === 'aggregate' ? '🔧' : n.def.name
+  return n.def.name
 }
 
 console.log(`\n${failed === 0 ? '✅ 全部通过' : `❌ ${failed} 个失败`}`)

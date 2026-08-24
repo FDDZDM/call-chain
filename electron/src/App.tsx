@@ -62,8 +62,12 @@ export default function App() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [isGraphFullscreen, setIsGraphFullscreen] = useState(false)
 
-  const { graph, progress, parseProject, parseFile, resolveSymbolAt, buildGraph, reset } = useAnalyzer()
+  const { graph, progress, error: analyzerError, parseProject, parseFile, resolveSymbolAt, buildGraph, reset } = useAnalyzer()
   const parsingRef = useRef(false)
+
+  useEffect(() => {
+    if (analyzerError) setError(analyzerError)
+  }, [analyzerError])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -487,7 +491,7 @@ function InspectorPanel({ graph, selectedId, onReanchor, onSelectNode }: {
           <>
             <div className="inspector-divider" />
             <div className="inspector-section">
-              <div className="inspector-section-title">调用了</div>
+              <div className="inspector-section-title">调用者</div>
               {callers.map((cn) => (
                 <div
                   key={cn.id}
@@ -505,7 +509,7 @@ function InspectorPanel({ graph, selectedId, onReanchor, onSelectNode }: {
 
         {callees.length > 0 && (
           <div className="inspector-section">
-            <div className="inspector-section-title">被调用</div>
+            <div className="inspector-section-title">被调用者</div>
             {callees.map((cn) => (
               <div
                 key={cn.id}

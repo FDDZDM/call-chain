@@ -1,37 +1,43 @@
 {
   "name": "callchain",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "代码调用链查看器（Electron 重写版）",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json && vite build",
+    "test": "npm run test:parser && npm run test:graph",
+    "test:parser": "node scripts/verify-parser.mjs && node scripts/test-e2e.mjs && node scripts/test-kotlin.mjs",
+    "test:graph": "node scripts/test-graph-builder.mjs && node scripts/test-graph-presentation.mjs",
+    "verify": "npm run build && npm test",
     "preview": "vite preview",
-    "electron:build": "vite build && electron-builder",
-    "electron:dev": "vite build && electron ."
+    "electron:build": "npm run build && electron-builder",
+    "electron:dev": "vite"
   },
   "dependencies": {
     "monaco-editor": "^0.56.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tree-sitter-wasm": "^1.1.4",
-    "web-tree-sitter": "^0.26.12"
+    "tree-sitter-wasm": "^1.1.6",
+    "web-tree-sitter": "^0.26.13"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.0",
-    "electron": "^31.7.7",
-    "electron-builder": "^24.13.0",
+    "@vitejs/plugin-react": "^6.1.0",
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3",
     "typescript": "^5.4.0",
-    "vite": "^5.3.0",
-    "vite-plugin-electron": "^0.28.0",
-    "vite-plugin-electron-renderer": "^0.14.0"
+    "vite": "^8.2.2",
+    "vite-plugin-electron": "^1.1.1",
+    "vite-plugin-electron-renderer": "^1.0.0"
+  },
+  "overrides": {
+    "dompurify": "^3.4.14"
   },
   "allowScripts": {
-    "electron@31.7.7": true,
-    "esbuild@0.21.5": true,
+    "electron@43.4.1": true,
     "fsevents@2.3.3": true
   },
   "build": {

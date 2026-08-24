@@ -149,5 +149,5 @@ export const LIMITS = {
   SCAN_TIMEOUT_MS: 15000,
   MAX_SYMBOLS_PER_FILE: 2000,
   /** L3 单链路最大可见节点数 */
-  MAX_VISIBLE_NODES: 25,
+  MAX_VISIBLE_NODES: 30,
 } as const

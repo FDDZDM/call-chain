@@ -9,6 +9,15 @@
 
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import type { CallGraph, GraphNode, GraphEdge, CallSite } from '../types/models'
+import { LIMITS } from '../types/models'
+import {
+  computeGraphLayout,
+  graphEdgePath,
+  GRAPH_COLUMN_STEP,
+  GRAPH_NODE_HEIGHT,
+  GRAPH_NODE_WIDTH,
+} from '../graph/layout'
+import { compactSourceLocation, wrapQualifiedName } from '../graph/labels'
 
 interface Props {
   graph: CallGraph | null
@@ -22,92 +31,9 @@ interface Props {
   onToggleFullscreen?: () => void
 }
 
-const NODE_W = 210
-const NODE_H = 50
-const COL_W = 280
-const ROW_H = 62
-const MAX_VISIBLE = 30
+const MAX_VISIBLE = LIMITS.MAX_VISIBLE_NODES
 
 interface ViewState { x: number; y: number; scale: number }
-
-// ── 布局：可见节点按 level 分列 + barycenter 排序 ──
-function computeLayout(nodes: GraphNode[], edges: GraphEdge[]) {
-  if (nodes.length === 0) return null
-
-  const byLevel = new Map<number, GraphNode[]>()
-  for (const n of nodes) {
-    const arr = byLevel.get(n.level) ?? []
-    arr.push(n)
-    byLevel.set(n.level, arr)
-  }
-  const levels = [...byLevel.keys()].sort((a, b) => a - b)
-
-  // 邻接索引（仅可见边）
-  const neighborsOf = new Map<string, string[]>()
-  for (const e of edges) {
-    const a = neighborsOf.get(e.from) ?? []
-    a.push(e.to)
-    neighborsOf.set(e.from, a)
-    const b = neighborsOf.get(e.to) ?? []
-    b.push(e.from)
-    neighborsOf.set(e.to, b)
-  }
-
-  const yPos = new Map<string, number>()
-  const avgY = (ids: string[]): number => {
-    let sum = 0, cnt = 0
-    for (const id of ids) {
-      const y = yPos.get(id)
-      if (y !== undefined) { sum += y; cnt++ }
-    }
-    return cnt > 0 ? sum / cnt : 0
-  }
-
-  // 锚点列居中
-  const col0 = byLevel.get(0) ?? []
-  col0.forEach((n, i) => yPos.set(n.id, (i - (col0.length - 1) / 2) * ROW_H))
-
-  // 向右排序
-  for (const level of levels) {
-    if (level <= 0) continue
-    const col = byLevel.get(level)!
-    col.forEach((n, i) => yPos.set(n.id, i * ROW_H))
-    col.sort((a, b) => avgY(neighborsOf.get(a.id) ?? []) - avgY(neighborsOf.get(b.id) ?? []))
-    col.forEach((n, i) => yPos.set(n.id, (i - (col.length - 1) / 2) * ROW_H))
-  }
-
-  // 向左排序
-  for (let i = levels.length - 1; i >= 0; i--) {
-    const level = levels[i]
-    if (level >= 0) continue
-    const col = byLevel.get(level)!
-    col.forEach((n, j) => yPos.set(n.id, j * ROW_H))
-    col.sort((a, b) => avgY(neighborsOf.get(a.id) ?? []) - avgY(neighborsOf.get(b.id) ?? []))
-    col.forEach((n, j) => yPos.set(n.id, (j - (col.length - 1) / 2) * ROW_H))
-  }
-
-  // 赋坐标
-  const positions = new Map<string, { x: number; y: number }>()
-  for (const n of nodes) {
-    const colIdx = levels.indexOf(n.level)
-    const x = (colIdx - (levels.length - 1) / 2) * COL_W - NODE_W / 2
-    positions.set(n.id, { x, y: yPos.get(n.id) ?? 0 })
-  }
-
-  const xs = nodes.map((n) => positions.get(n.id)!.x)
-  const ys = nodes.map((n) => positions.get(n.id)!.y)
-  return {
-    positions,
-    levels,
-    byLevel,
-    bounds: {
-      minX: Math.min(...xs) - 20,
-      maxX: Math.max(...xs) + NODE_W + 20,
-      minY: Math.min(...ys) - 30,
-      maxY: Math.max(...ys) + NODE_H + 10,
-    },
-  }
-}
 
 function shortPath(file: string): string {
   const parts = file.split('/')
@@ -185,7 +111,7 @@ export default function CallGraphView({ graph, selectedId, onSelect, onReanchor,
         def: first.def,
         level: first.level,
         x: 0, y: 0,
-        width: NODE_W, height: NODE_H,
+        width: GRAPH_NODE_WIDTH, height: GRAPH_NODE_HEIGHT,
         nodeType: 'aggregate',
         category: 'util',
         aggregatedCount: members.length,
@@ -225,7 +151,7 @@ export default function CallGraphView({ graph, selectedId, onSelect, onReanchor,
   }, [graph, dynamicAgg, visibleNodeIds])
 
   const layout = useMemo(() => 
-    visibleNodes.length > 0 ? computeLayout(visibleNodes, visibleEdges) : null,
+    visibleNodes.length > 0 ? computeGraphLayout(visibleNodes, visibleEdges) : null,
     [visibleNodes, visibleEdges]
   )
 
@@ -304,6 +230,16 @@ export default function CallGraphView({ graph, selectedId, onSelect, onReanchor,
 
   // 点击节点：展开/折叠 或 选择
   const handleNodeClick = useCallback((node: GraphNode) => {
+    if (node.nodeType === 'aggregate' && node.parentId) {
+      setDynamicAgg((previous) => {
+        const next = new Map(previous)
+        next.delete(node.parentId!)
+        return next
+      })
+      setExpandWarning(`已展开 ${node.aggregatedCount ?? 0} 个工具函数`)
+      setTimeout(() => setExpandWarning(null), 2500)
+      return
+    }
     onSelect(node.id)
     if (!node.hasChildren) return
     if (expandedNodes.has(node.id)) {
@@ -395,15 +331,6 @@ export default function CallGraphView({ graph, selectedId, onSelect, onReanchor,
     else levelLabels[l] = `被调用者 ${l}`
   }
 
-  // 边路径
-  const edgePath = (fromId: string, toId: string) => {
-    const from = positions.get(fromId)!, to = positions.get(toId)!
-    const x1 = from.x + NODE_W, y1 = from.y + NODE_H / 2
-    const x2 = to.x, y2 = to.y + NODE_H / 2
-    const dx = Math.max(Math.abs(x2 - x1) / 2, 30)
-    return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`
-  }
-
   // 面包屑项
   const breadcrumbItems = breadcrumbIds.map((id) => {
     const n = nodeMap.get(id)
@@ -479,7 +406,7 @@ export default function CallGraphView({ graph, selectedId, onSelect, onReanchor,
         <g transform={`translate(${view.x} ${view.y}) scale(${view.scale})`}>
           {/* 列标题 */}
           {levels.map((level) => {
-            const x = (levels.indexOf(level) - (levels.length - 1) / 2) * COL_W
+            const x = level * GRAPH_COLUMN_STEP
             const isAnchor = level === 0
             return (
               <text
@@ -502,12 +429,12 @@ export default function CallGraphView({ graph, selectedId, onSelect, onReanchor,
             const isDimmed = highlightedPath && !isOnPath
             const from = positions.get(edge.from), to = positions.get(edge.to)
             if (!from || !to) return null
-            const midX = (from.x + NODE_W + to.x) / 2
-            const midY = (from.y + to.y) / 2 + NODE_H / 2
+            const midX = (from.x + GRAPH_NODE_WIDTH + to.x) / 2
+            const midY = (from.y + to.y) / 2 + GRAPH_NODE_HEIGHT / 2
             return (
               <g key={key} style={{ opacity: isDimmed ? 0.1 : 1, transition: 'opacity .2s' }}>
                 <path
-                  d={edgePath(edge.from, edge.to)}
+                  d={graphEdgePath(positions, edge.from, edge.to)}
                   className={`edge ${isHovered ? 'edge-hovered' : ''} ${isOnPath ? 'edge-onpath' : ''}`}
                   markerEnd={`url(#${isHovered || isOnPath ? 'arrow-hl' : 'arrow'})`}
                   onMouseEnter={() => setHoveredEdge(key)}
@@ -535,7 +462,11 @@ export default function CallGraphView({ graph, selectedId, onSelect, onReanchor,
             const isDimmed = highlightedPath && !isOnPath
             const isExpanded = expandedNodes.has(node.id)
             const isAggregate = node.nodeType === 'aggregate'
-            const fileName = shortPath(node.def.file)
+            const qualifiedName = isAggregate
+              ? `🔧 ${node.aggregatedCount} 个工具函数`
+              : `${node.def.className ? `${node.def.className}.` : ''}${node.def.name}`
+            const [nameLine1, nameLine2] = wrapQualifiedName(qualifiedName)
+            const sourceLocation = compactSourceLocation(node.def.file, node.def.startLine)
 
             return (
               <g
@@ -584,36 +515,38 @@ export default function CallGraphView({ graph, selectedId, onSelect, onReanchor,
                 }}
                 style={{ cursor: 'pointer', opacity: isDimmed ? 0.2 : 1, transition: 'opacity .2s' }}
               >
-                <rect width={NODE_W} height={NODE_H} rx={5} className="node-bg" />
-                <rect width={3} height={NODE_H} rx={1.5} className={`node-stripe cat-${node.category}`} />
+                <title>{qualifiedName}{node.def.paramSignature} · {node.def.file}:{node.def.startLine}</title>
+                <rect width={GRAPH_NODE_WIDTH} height={GRAPH_NODE_HEIGHT} rx={6} className="node-bg" />
+                <rect width={3} height={GRAPH_NODE_HEIGHT} rx={1.5} className={`node-stripe cat-${node.category}`} />
                 
                 {/* 展开/折叠指示器 */}
                 {node.hasChildren ? (
-                  <text x={12} y={20} className="node-indicator" onClick={(e) => { e.stopPropagation(); handleNodeClick(node) }}>
+                  <text x={12} y={25} className="node-indicator" onClick={(e) => { e.stopPropagation(); handleNodeClick(node) }}>
                     {isExpanded ? '▼' : '▶'}
                   </text>
                 ) : (
-                  <text x={12} y={20} className="node-indicator node-indicator-leaf">●</text>
+                  <text x={12} y={25} className="node-indicator node-indicator-leaf">●</text>
                 )}
 
                 {/* 函数名 */}
                 <text x={28} y={20} className="node-name">
-                  {isAggregate ? `🔧 ${node.aggregatedCount} 个工具函数` : `${node.def.className ? node.def.className + '.' : ''}${node.def.name}`}
+                  <tspan x={28}>{nameLine1}</tspan>
+                  {nameLine2 && <tspan x={28} dy={14}>{nameLine2}</tspan>}
                 </text>
                 {/* 文件:行号 */}
-                <text x={28} y={35} className="node-file">{fileName}:{node.def.startLine}</text>
+                <text x={28} y={55} className="node-file">{sourceLocation}</text>
                 {/* 类型徽章 */}
                 {!isAggregate && (
                   <>
-                    <rect x={NODE_W - 48} y={6} width={40} height={13} rx={3} className={`node-badge-bg cat-${node.category}`} />
-                    <text x={NODE_W - 28} y={15} className="node-badge-text" textAnchor="middle">
+                    <rect x={GRAPH_NODE_WIDTH - 48} y={7} width={40} height={14} rx={3} className={`node-badge-bg cat-${node.category}`} />
+                    <text x={GRAPH_NODE_WIDTH - 28} y={17} className="node-badge-text" textAnchor="middle">
                       {categoryLabel(node.category)}
                     </text>
                   </>
                 )}
                 {/* 子节点数提示 */}
                 {node.hasChildren && !isExpanded && (
-                  <text x={NODE_W - 8} y={NODE_H - 6} className="node-child-count" textAnchor="end">
+                  <text x={GRAPH_NODE_WIDTH - 8} y={GRAPH_NODE_HEIGHT - 9} className="node-child-count" textAnchor="end">
                     {node.childIds.length}→
                   </text>
                 )}
@@ -655,7 +588,7 @@ export default function CallGraphView({ graph, selectedId, onSelect, onReanchor,
         const pos = positions.get(node.id)
         if (!pos) return null
         const left = view.x + pos.x * view.scale
-        const top = view.y + (pos.y + NODE_H) * view.scale + 8
+        const top = view.y + (pos.y + GRAPH_NODE_HEIGHT) * view.scale + 8
         // 确保不超出视口
         const adjustedLeft = Math.max(8, Math.min(left, (svgRef.current?.clientWidth ?? 9999) - 360))
 
@@ -721,6 +654,7 @@ export default function CallGraphView({ graph, selectedId, onSelect, onReanchor,
                   .filter(Boolean).join('、')}
               </div>
             )}
+            {isAgg && <div className="tooltip-agg">点击展开簇内函数</div>}
             {node.hasChildren && (
               <div className="tooltip-agg">点击{'\u25B6'}展开 {node.childIds.length} 个子节点</div>
             )}

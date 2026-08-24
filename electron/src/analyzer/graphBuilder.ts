@@ -8,8 +8,8 @@
 //    - 被调用者（level > 0）：childIds = 只显示它的被调用者（继续向右）
 //    这样每次展开只沿链路向外延伸一步，不会展开出旁支，节点线性增长
 // 2. level = 真实有向距离（-k 上游 k 层，+k 下游 k 层），非锚点不会混入 level 0
-// 3. 函数分类：core/io/util/handler/thirdparty
-// 4. 智能聚合：同一父节点同一方向的连续工具函数折叠为 🔧 簇
+// 3. 同层顺序遵循源码调用顺序，让图与程序员的阅读路径一致
+// 4. 分析层保留完整节点；只有视图超限时才由 UI 按需聚合
 
 import type {
   CallGraph,
@@ -19,8 +19,8 @@ import type {
   CallSite,
   FileParseResult,
   FuncCategory,
-} from '@/types/models'
-import { LIMITS } from '@/types/models'
+} from '../types/models.ts'
+import { LIMITS } from '../types/models.ts'
 
 export interface GraphInput {
   functionsById: Map<string, FunctionSymbol>
@@ -56,17 +56,19 @@ export function classifyFunction(def: FunctionSymbol): FuncCategory {
   return 'core'
 }
 
-// 分类优先级：展开时新邻居按相关性排序（core > handler > io > util）
-export const CATEGORY_RANK: Record<FuncCategory, number> = {
-  core: 0,
-  handler: 1,
-  io: 2,
-  thirdparty: 3,
-  util: 4,
-}
-
 const NODE_W = 200
 const NODE_H = 48
+
+function compareSites(a: CallSite[], b: CallSite[]): number {
+  const left = a[0]
+  const right = b[0]
+  if (!left) return right ? 1 : 0
+  if (!right) return -1
+  return left.file.localeCompare(right.file)
+    || left.line - right.line
+    || left.col - right.col
+    || left.calleeName.localeCompare(right.calleeName)
+}
 
 export function buildGraph(
   input: GraphInput,
@@ -94,6 +96,23 @@ export function buildGraph(
       else arr2.push({ calleeId: c.resolvedCalleeId, sites: [c] })
       calleesOf.set(callerId, arr2)
     }
+  }
+
+  // 被调用者严格按调用点出现顺序排列；调用者按定义位置排列。
+  // 这个顺序会一直传到 childIds 和图布局，避免重新解析后节点跳动。
+  for (const entries of calleesOf.values()) {
+    entries.sort((a, b) => compareSites(a.sites, b.sites)
+      || a.calleeId.localeCompare(b.calleeId))
+  }
+  for (const entries of callersOf.values()) {
+    entries.sort((a, b) => {
+      const left = input.functionsById.get(a.callerId)
+      const right = input.functionsById.get(b.callerId)
+      return (left?.file ?? '').localeCompare(right?.file ?? '')
+        || (left?.startLine ?? 0) - (right?.startLine ?? 0)
+        || compareSites(a.sites, b.sites)
+        || a.callerId.localeCompare(b.callerId)
+    })
   }
 
   // ── 链路语义 BFS ──
@@ -177,6 +196,20 @@ export function buildGraph(
     }
   }
 
+
+  // BFS 的 parent 只表示最短面包屑路径，不能丢掉 DAG 中的共享分支。
+  // 因此在 level 确定后，用完整有向边重建每个节点的可展开邻居。
+  childIdsMap.clear()
+  for (const edge of edgesByKey.values()) {
+    const fromLevel = levelById.get(edge.from)
+    const toLevel = levelById.get(edge.to)
+    if (fromLevel === undefined || toLevel === undefined) continue
+    if (fromLevel === 0 && toLevel === 1) registerChild(edge.from, edge.to)
+    else if (toLevel === 0 && fromLevel === -1) registerChild(edge.to, edge.from)
+    else if (fromLevel > 0 && toLevel === fromLevel + 1) registerChild(edge.from, edge.to)
+    else if (toLevel < 0 && fromLevel === toLevel - 1) registerChild(edge.to, edge.from)
+  }
+
   // 收集未解析调用
   const unresolved: CallSite[] = []
   for (const nodeId of visited) {
@@ -191,59 +224,15 @@ export function buildGraph(
     if (def) nodeCategories.set(id, classifyFunction(def))
   }
 
-  // ── 智能聚合：同一父节点、同一方向、数量 >= 2 的工具函数折叠 ──
-  const aggregatedIds = new Set<string>()
-  const aggregateMap = new Map<string, { memberIds: string[]; level: number }>()
-
-  for (const [parentId, childIds] of childIdsMap) {
-    // 按方向分组（锚点的子节点有两个方向；其他节点单向）
-    const leftUtils: string[] = []
-    const rightUtils: string[] = []
-    for (const cid of childIds) {
-      if (cid === anchorId) continue
-      if (nodeCategories.get(cid) !== 'util') continue
-      const lvl = levelById.get(cid) ?? 0
-      if (lvl < 0) leftUtils.push(cid)
-      else if (lvl > 0) rightUtils.push(cid)
-    }
-    if (leftUtils.length >= 2) {
-      const aggId = `agg:${parentId}:L`
-      aggregateMap.set(aggId, { memberIds: leftUtils, level: levelById.get(leftUtils[0]) ?? -1 })
-      for (const mid of leftUtils) aggregatedIds.add(mid)
-    }
-    if (rightUtils.length >= 2) {
-      const aggId = `agg:${parentId}:R`
-      aggregateMap.set(aggId, { memberIds: rightUtils, level: levelById.get(rightUtils[0]) ?? 1 })
-      for (const mid of rightUtils) aggregatedIds.add(mid)
-    }
-  }
-
-  // 成员 → 聚合节点 映射（用于父节点 childIds 重定向与边重定向）
-  const memberToAgg = new Map<string, string>()
-  for (const [aggId, { memberIds }] of aggregateMap) {
-    for (const mid of memberIds) memberToAgg.set(mid, aggId)
-  }
-  const resolveNodeId = (id: string): string => memberToAgg.get(id) ?? id
-
   // ── 构建节点 ──
   const nodes: GraphNode[] = []
 
   for (const id of visited) {
-    if (aggregatedIds.has(id)) continue
     const def = input.functionsById.get(id)
     if (!def) continue
     const level = levelById.get(id) ?? 0
     const category = nodeCategories.get(id) ?? 'core'
-    // childIds 重定向：聚合成员替换为聚合节点 id，并按相关性排序
-    const rawChildIds = childIdsMap.get(id) ?? []
-    const mapped = new Set<string>()
-    for (const cid of rawChildIds) mapped.add(resolveNodeId(cid))
-    const visibleChildIds = [...mapped].sort((a, b) => {
-      const na = input.functionsById.get(a), nb = input.functionsById.get(b)
-      const ra = na ? CATEGORY_RANK[nodeCategories.get(a) ?? 'core'] : 0
-      const rb = nb ? CATEGORY_RANK[nodeCategories.get(b) ?? 'core'] : 0
-      return ra - rb
-    })
+    const visibleChildIds = childIdsMap.get(id) ?? []
     nodes.push({
       id, def, level,
       x: 0, y: 0,
@@ -256,45 +245,9 @@ export function buildGraph(
     })
   }
 
-  // 聚合节点
-  for (const [aggId, { memberIds, level }] of aggregateMap) {
-    const firstDef = input.functionsById.get(memberIds[0])
-    if (!firstDef) continue
-    const parentOfFirst = parentIdMap.get(memberIds[0]) ?? null
-    nodes.push({
-      id: aggId,
-      def: firstDef,
-      level,
-      x: 0, y: 0,
-      width: NODE_W, height: NODE_H,
-      nodeType: 'aggregate',
-      category: 'util',
-      aggregatedCount: memberIds.length,
-      aggregatedIds: memberIds,
-      parentId: parentOfFirst,
-      childIds: [],
-      hasChildren: false,
-    })
-  }
-
-  // ── 构建边（重定向到聚合节点）──
-  const edgesArr: GraphEdge[] = []
-  const edgesByAggKey = new Map<string, GraphEdge>()
-  for (const e of edgesByKey.values()) {
-    if (!visited.has(e.from) || !visited.has(e.to)) continue
-    const from = resolveNodeId(e.from)
-    const to = resolveNodeId(e.to)
-    if (from === to) continue
-    const key = `${from}->${to}`
-    const existing = edgesByAggKey.get(key)
-    if (existing) {
-      for (const s of e.sites) if (!existing.sites.includes(s)) existing.sites.push(s)
-    } else {
-      const edge: GraphEdge = { from, to, sites: [...e.sites], edgeType: e.edgeType }
-      edgesByAggKey.set(key, edge)
-      edgesArr.push(edge)
-    }
-  }
+  const edgesArr = [...edgesByKey.values()].filter((edge) =>
+    visited.has(edge.from) && visited.has(edge.to)
+  )
 
   const bounds = { width: 0, height: 0 }
 

@@ -93,7 +93,9 @@ async function handle(req: WorkerRequest): Promise<void> {
       console.error('[worker] parser init failed:', err)
     }
     post({ type: 'progress', parsed: 0, total: expectedTotal, totalFunctions: 0 })
-    // 不立即flush，等收到parseProject后再处理
+    // 用户可能在 wasm 下载完成前已经打开项目。此时 parseProject
+    // 和 parseFile 都在队列里，必须由 initWasm 主动启动排空，否则会永久卡在 0/N。
+    await flushPending()
     return
   }
 
